@@ -1,0 +1,442 @@
+---
+title: "SLP Estimations: Data Prep"
+output: html_notebook
+---
+
+# Packages
+```{r}
+library(tidyverse) # install.packages('tidyverse')
+library(xfun) # install.packages('xfun')
+library(remotes) # install.packages('remotes')
+library(autoscore) # xfun::install_github("TysonStanley/autoscore")
+library(readxl)
+library(SnowballC) # install.packages('SnowballC') # this is needed for autoscore
+library(corrr)
+library(ggpubr)
+library(rio)
+```
+
+# Naive Listener Data
+This section of code uploads, preps, and scores the transcriptions provided by naive listeners.
+
+## Prepping Transcription Data
+```{r}
+naiveData <- utils::read.csv(paste("Data/Naive Listener Data/",list.files("Data/Naive Listener Data", pattern = "Naive")[1], sep = ""),header = FALSE, stringsAsFactors = FALSE, strip.white=TRUE)
+  naiveData[3,] <- NA
+  naiveData[2,1:38] <- NA
+headings <- as.data.frame(lapply(naiveData[1:3,], paste,collapse="_")) %>%
+    str_remove_all("_NA") %>%
+    str_remove_all("_4") %>%
+    str_remove_all(" ") %>%
+    t() %>%
+    as.data.frame
+    colnames(naiveData) <- headings
+    naiveData <- naiveData[-c(1:3),]
+    
+naiveDataClean <- naiveData %>%
+  dplyr::rename(proloficID = Q1.1,
+                inUS = Q2.1,
+                english = Q2.2,
+                famSLHDs = Q2.3,
+                age = Q3.1,
+                gender = Q3.2,
+                race = Q3.3,
+                ethnicity = Q3.4) %>%
+  dplyr::filter(Finished == "True") %>%
+  dplyr::filter(AudioCheck == "Yes, I can hear the audio.") %>%
+  dplyr::mutate(ID = paste("N",row_number(),sep = "")) %>% # Creates listener IDs
+  relocate(ID, .before = StartDate) # Puts ID col at the beginning
+
+# Removes unwanted variables
+rm(headings,naiveData)
+```
+
+## Autoscoring the transcriptions
+```{r}
+PhraseIDs <- readxl::read_xlsx("Data/PhraseID Key.xlsx")
+acceptable_spellings <- readxl::read_xlsx("Data/acceptableSpellings.xlsx")
+
+transcriptions <- naiveDataClean %>%
+  dplyr::select(ID, AM5_1.1:HDF5_2.VAS) %>%
+  tidyr::pivot_longer(!ID,names_to = "file") %>%
+  dplyr::rename(Response = value) %>%
+  dplyr::filter(!grepl("VAS", file)) %>% # Removes VAS ratings
+  dplyr::filter(Response != "") %>% # Removes rows where listeners did not rate
+  dplyr::mutate(SpeakerID = sub("_.*", "",file)) %>%
+  dplyr::mutate(PhraseID = sub(".*_", "",file)) %>%
+  base::merge(PhraseIDs, by = "PhraseID") %>%
+  dplyr::mutate(rowID = paste(file,ID, sep = "_")) %>%
+  relocate(Response, .after = Target) %>%
+  column_to_rownames(var = "rowID")
+
+# Add Target / TargetNumber idiosyncrasies here:
+transcriptions$Target[transcriptions$file == "AF1_1.3"] <- "soul has the power of a man half his age"
+transcriptions$TargetNumber[transcriptions$file == "AF1_1.3"] <- 10
+
+transcriptions$Target[transcriptions$file == "AF9_2.25"] <- "one hand lay on the lid of his"
+transcriptions$TargetNumber[transcriptions$file == "AF9_2.25"] <- 8
+
+transcriptions$Target[transcriptions$file == "HDF5_1.3"] <- "his soul has the power a man half his age"
+transcriptions$TargetNumber[transcriptions$file == "HDF5_1.3"] <- 10
+
+transcriptions$Target[transcriptions$file == "HDF5_2.35"] <- "sis, don't get irate, I'll have him home by 8"
+transcriptions$TargetNumber[transcriptions$file == "HDF5_2.35"] <- 10
+
+transcriptions$Target[transcriptions$file == "ALSF7_1.12"] <- "but grandma shouts shouts Bereave me"
+transcriptions$TargetNumber[transcriptions$file == "ALSF7_1.12"] <- 6
+
+transcriptions$Target[transcriptions$file == "HDF1_1.4"] <- "The way he speaks to my grandma"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_1.4"] <- 7
+
+transcriptions$Target[transcriptions$file == "HDF1_1.8"] <- "will learn that she is a ray of light"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_1.8"] <- 9
+
+transcriptions$Target[transcriptions$file == "HDF1_1.15"] <- "Grandpa would tease he'd tuck six cakes"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_1.15"] <- 7
+
+transcriptions$Target[transcriptions$file == "HDF1_1.16"] <- "in the side of his white coat"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_1.16"] <- 7
+
+transcriptions$Target[transcriptions$file == "HDF1_2.2"] <- "It's quite a sight"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_2.22"] <- 4
+
+transcriptions$Target[transcriptions$file == "HDF1_2.29"] <- "when he sees his friend"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_2.29"] <- 5
+
+transcriptions$Target[transcriptions$file == "HDF1_2.31"] <- "Hey, who let this bore out of the jail"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_2.31"] <- 9
+
+transcriptions$Target[transcriptions$file == "HDF1_2.35"] <- "Jeez, don't get irate, I'll have him home by 8"
+transcriptions$TargetNumber[transcriptions$file == "HDF1_2.31"] <- 10
+
+transcriptions$Target[transcriptions$file == "PDM12_1.4"] <- "The way he speaks to my grandma"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_1.4"] <- 7
+
+transcriptions$Target[transcriptions$file == "PDM12_1.8"] <- "will learn that she is a ray of light"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_1.8"] <- 9
+
+transcriptions$Target[transcriptions$file == "PDM12_1.14"] <- "he'd miss the most"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_1.14"] <- 4
+
+transcriptions$Target[transcriptions$file == "PDM12_1.15"] <- "Grandpa would often tease he'd duck tuck six cakes"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_1.15"] <- 9
+
+transcriptions$Target[transcriptions$file == "PDM12_1.17"] <- "or in my grandma's vase"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_1.17"] <- 5
+
+transcriptions$Target[transcriptions$file == "PDM12_2.21"] <- "and give a wailing speech to the kids down at the mall"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_2.21"] <- 12
+
+transcriptions$Target[transcriptions$file == "PDM12_2.33"] <- "I'll trust you'll be back later"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_2.33"] <- 6
+
+transcriptions$Target[transcriptions$file == "PDM12_2.35"] <- "Jeez, sis, don't get irate, I'll have him back by 8"
+transcriptions$TargetNumber[transcriptions$file == "PDM12_2.35"] <- 11
+
+
+cleanTranscriptions <- transcriptions %>%
+  dplyr::select(ID,Target,Response) %>%
+  dplyr::rename(id = ID,
+                target = Target,
+                response = Response)
+
+autoscoreOutput <- autoscore::autoscore(cleanTranscriptions,
+                                             acceptable_df = acceptable_spellings,
+                                             plural_rule = TRUE,
+                                             plural_add_rule = TRUE,
+                                             tense_rule = TRUE,
+                                             tense_add_rule = TRUE,
+                                             a_the_rule = TRUE,
+                                             root_word_rule = TRUE,
+                                             double_letter_rule = TRUE,
+                                             suffix_rule = TRUE)
+autoscoreOutput <- autoscoreOutput %>%
+  dplyr::rename(Autoscore = autoscore) %>% # This line prepares the autoscored data to be merged with 'transcriptions'
+  dplyr::select(Autoscore)
+# The below pipe creates the 'scoredTranscriptions', and reorders the columns
+ scoredTranscriptions <-  base::merge(autoscoreOutput, transcriptions, by='row.names') %>%
+   dplyr::rename(ListenerID = ID) %>%
+   relocate(Autoscore, .after = TargetNumber) %>%
+   relocate(PhraseID, .after = SpeakerID) %>%
+   dplyr::select(!c(Row.names, file))
+
+# Removes unwanted variables
+rm(PhraseIDs,acceptable_spellings,transcriptions,cleanTranscriptions,autoscoreOutput)
+```
+
+## Transcription Accuracy
+```{r}
+transAcc <- scoredTranscriptions %>%
+  group_by(SpeakerID, ListenerID) %>%
+  summarise(sumTarget = sum(TargetNumber),
+            sumTranscription = sum(Autoscore),
+            .groups = "rowwise") %>%
+  dplyr::mutate(transAcc = (sumTranscription/sumTarget)*100) %>%
+  dplyr::select(!c(sumTarget,sumTranscription))
+
+Listener_transAcc <- transAcc %>%
+  dplyr::group_by(ListenerID) %>%
+  dplyr::summarise(transAcc = mean(transAcc))
+
+Speaker_transAcc<- transAcc %>%
+  dplyr::group_by(SpeakerID) %>%
+  dplyr::summarise(transAcc = mean(transAcc))
+```
+
+## VAS 
+```{r}
+VAS <- naiveDataClean %>%
+  dplyr::select(ID, AM5_1.1:HDF5_2.VAS) %>%
+  tidyr::pivot_longer(!ID,names_to = "file") %>%
+  dplyr::rename(Response = value) %>%
+  dplyr::filter(grepl("VAS", file)) %>% # Removes VAS ratings
+  dplyr::filter(Response != "") %>% # Removes rows where listeners did not rate
+  dplyr::mutate(SpeakerID = sub("_.*", "",file)) %>%
+  dplyr::rename(VAS = Response,
+                ListenerID = ID) %>%
+  relocate(SpeakerID, .before = "ListenerID") %>%
+  dplyr::select(!file)
+
+Listener_VAS <- VAS %>%
+  dplyr::select(ListenerID, VAS) %>%
+  dplyr::mutate(VAS = as.numeric(VAS)) %>%
+  dplyr::group_by(ListenerID) %>%
+  dplyr::summarise(VAS = mean(VAS))
+
+Speaker_VAS <- VAS %>%
+  dplyr::select(SpeakerID, VAS) %>%
+  dplyr::mutate(VAS = as.numeric(VAS)) %>%
+  dplyr::group_by(SpeakerID) %>%
+  dplyr::summarise(VAS = mean(VAS))
+```
+
+## Preparing Naive Listener Files for Export
+This section preps the NaiveListener_Demographics dataframe, as well a the NaiveListener_correlation dataframe. It also begins the intRatings_bySpeaker dataframe, which will be used for Question #1.
+
+```{r}
+# NaiveListener_Demographics ----
+ListenerDemo <- naiveDataClean %>%
+  dplyr::select(!StartDate:UserLanguage) %>%
+  dplyr::select(!proloficID) %>%
+  dplyr::select(ID:ethnicity) %>%
+  dplyr::rename(ListenerID = ID)
+
+ListenerDemo$race[ListenerDemo$Q3.3_7_TEXT == "Native American/ African amercing"] <- "Biracial or Multiracial"
+
+ListenerDemo <- ListenerDemo %>%
+  dplyr::select(!Q3.3_7_TEXT) %>%
+  dplyr::select(!Q3.2_8_TEXT)
+
+
+# NaiveListener_correlation ----
+ListenerCorr <- base::merge(transAcc,VAS) %>%
+    dplyr::rename(naive_VAS = VAS,
+                naive_OT = transAcc)
+
+# intRatings_bySpeaker ----
+intRatings <- base::merge(Speaker_VAS,Speaker_transAcc) %>%
+  dplyr::rename(naive_VAS = VAS,
+                naive_OT = transAcc)
+
+```
+
+## Exporting Files
+
+```{r}
+# NaiveListener_Demographics ----
+rio::export(ListenerDemo, file = "Data/Shared Data/NaiveListener_Demographics.csv")
+
+# NaiveListener_correlation ----
+rio::export(ListenerCorr, file = "Data/Shared Data/NaiveListener_Correlation.csv")
+
+# Removeing unwanted variables
+rm(naiveDataClean,Listener_transAcc,Listener_VAS,scoredTranscriptions,Speaker_transAcc,Speaker_VAS,transAcc,VAS)
+```
+
+# SLP Data
+
+## Data Cleaning & Preparing Data for Export
+This chunk uploads the two SLP dataframes into R, reassigns variable names, and generated slp IDs.
+
+```{r}
+# The first SLP survey
+slpData1 <- utils::read.csv(paste("Data/SLP Data/",list.files("Data/SLP Data", pattern = "New SLP")[1], sep = ""),header = FALSE, stringsAsFactors = FALSE, strip.white=TRUE)
+  slpData1[2,1:39] <- NA
+  slpData1[2,281:291] <- NA
+  slpData1[3,1:291] <- NA
+  slpData1[3,40:79] <- "A"
+  slpData1[3,80:119] <- "B"
+  slpData1[3,120:159] <- "C"
+  slpData1[3,161:200] <- "A"
+  slpData1[3,201:240] <- "B"
+  slpData1[3,241:280] <- "C"
+  headings <- as.data.frame(lapply(slpData1[1:3,], paste,collapse="_")) %>%
+    str_remove_all("_NA") %>%
+    str_remove_all("_4") %>%
+    str_remove_all(" ") %>%
+    t() %>%
+    as.data.frame
+    colnames(slpData1) <- headings
+slpData1 <- slpData1[-c(1:3),]
+ratings <- slpData1 %>%
+  dplyr::select(VAS.AF1_s1_A:EST.PDM9.R_s3_C) %>%
+  dplyr::mutate_all(as.numeric)
+slpData1[,40:280] <- ratings
+
+# The second SLP survey
+slpData2 <- utils::read.csv(paste("Data/SLP Data/",list.files("Data/SLP Data", pattern = "Second SLP")[1], sep = ""),header = FALSE)
+    colnames(slpData2) <- headings
+slpData2 <- slpData2[-c(1:3),]
+ratings <- slpData2 %>%
+  dplyr::select(VAS.AF1_s1_A:EST.PDM9.R_s3_C) %>%
+  dplyr::mutate_all(as.numeric)
+slpData2[,40:280] <- ratings
+
+# Merging the two SLP surveys
+slpData <- rbind(slpData1,slpData2)
+rm(slpData1, slpData2, ratings, headings) #removing the unneeded two separate SLP surveys.
+
+slpDataClean <- slpData %>%
+  dplyr::filter(Finished == "True") %>%
+  dplyr::filter(EfficiencyRatings_1 != "") %>% # Filters out the incomplete cases
+  dplyr::filter(Email != "") %>%
+  dplyr::filter(!str_detect(StartDate, "2021-07-28")) %>% # Filters out the data collected on 7/28, when we got spam bombed
+  dplyr::mutate(slpID = paste("slp",row_number(),sep = "")) %>% # Creates SLP IDs
+  dplyr::rename(slhDisorder = Q3.1, # Renaming many of the important variables
+                citizen = Q3.2,
+                english = Q3.3,
+                cccs = Q3.4,
+                age = Q4.1,
+                gender = Q4.2,
+                race = Q4.3,
+                otherRaceText = Q4.3_7_TEXT,
+                ethnicity = Q4.4,
+                yearsExp = Q5.1,
+                workSetting = Q5.2,
+                medSetting = Q5.3,
+                ptPopAge = Q5.4,
+                percentCaseload = Q5.5,
+                perceivedComp = Q5.6_1,
+                eff.percentEst = EfficiencyRatings_1,
+                eff.vas = EfficiencyRatings_2,
+                eff.formal = EfficiencyRatings_3,
+                eff.transcription = EfficiencyRatings,
+                eff.otherInformal = EfficiencyRatings_5,
+                formalAssessments = FormalAssessments,
+                otherFormalText = FormalAssessments_9_TEXT,
+                otherInformalText = Other) %>%
+  relocate(slpID, .before = StartDate) # Puts ID col at the beginning
+
+# These two lines of code fix individual responses to be clean.
+  slpDataClean$race[slpDataClean$otherRaceText == "Asian "] <- "Asian American" # This line reclassifies 1 person who identified
+  slpDataClean$workSetting[slpDataClean$ResponseId == "R_1JPKUAAUEy5pSF4"] <- "Medical" # This line reclassifies 1 SNF SLP from "Other" to "Medical"
+```
+
+## Filtering for Medical SLPs
+This is filtering out non-medical SLPs. This is only included for the ASHA poster. Delete this section for manuscript.
+```{r}
+slpDataClean <- slpDataClean %>%
+  dplyr::filter(workSetting == "Medical")
+```
+
+## Check for Unique IPs
+```{r}
+# Checks for unique IPs
+if(base::any(duplicated(slpDataClean$IPAddress) == TRUE) == FALSE){
+  print("There were no duplicate IP addresses")
+} else {
+  print("WARNING: Duplicate IP addresses detected")
+}
+```
+
+## Preparing Data for Export
+```{r}
+# SLP Demographic Info ----
+slpDemo <- slpDataClean %>%
+  dplyr::select(!StartDate:Q1.1) %>%
+  dplyr::select(!otherRaceText) %>%
+  dplyr::select(!Q4.2_8_TEXT) %>%
+  dplyr::select(!Q6.1:Q132) %>%
+  dplyr::select(!Email:Q125)  
+
+# Prepping the slp_Correlation dataframe ----
+slpWide <- slpDataClean %>%
+  dplyr::select(slpID, VAS.AF1_s1_A:EST.PDM9.R_s3_C) # This subjects just the ID and the ratings
+
+slpLong <- tidyr::pivot_longer(slpWide, 
+                      cols = VAS.AF1_s1_A:EST.PDM9.R_s3_C) # Pivots data to longer
+slpLong <- slpLong %>%
+  dplyr::rename(fileName = name,
+                rating = value)
+
+# Separating the listener's first and second ratings
+slpLong_firstRating <- slpLong %>%
+  dplyr::filter(!grepl(".R",fileName))
+
+slpLong_secondRating <- slpLong %>%
+  dplyr::filter(grepl(".R",fileName)) %>%
+  dplyr::rename(relRating = rating) %>%
+  dplyr::mutate(newName = str_replace(fileName,".R","")) %>%
+  dplyr::select(!fileName) %>%
+  dplyr::rename(fileName = newName)
+
+# Merging the listeners first and second ratings
+slpLong <- base::merge(slpLong_firstRating,
+                    slpLong_secondRating,
+                    by = intersect(names(slpLong_firstRating), names(slpLong_secondRating)),
+                    no.dups = FALSE) %>%
+  dplyr::mutate(Speaker = sub("_.*", "", fileName),
+                Speaker = sub("VAS.", "", Speaker),
+                Speaker = sub("EST.", "", Speaker),
+                Method = substr(fileName,1,3)) %>%
+  dplyr::filter(rating != "") %>%
+  dplyr::select(!fileName) %>%
+  dplyr::relocate(Speaker, .after = slpID) %>%
+  dplyr::relocate(Method, .after = Speaker)
+
+slpLong_VAS <- slpLong %>%
+  dplyr::filter(Method == "VAS") %>%
+  dplyr::select(!Method) %>%
+  dplyr::rename(slp_VAS = rating,
+                slp_VAS.Rel = relRating)
+
+slpLong_EST <- slpLong %>%
+  dplyr::filter(Method == "EST") %>%
+  dplyr::select(!Method) %>%
+  dplyr::rename(slp_EST = rating,
+                slp_EST.Rel = relRating)
+
+slpCorr <- base::merge(slpLong_VAS,slpLong_EST, by = intersect(names(slpLong_VAS),names(slpLong_EST)),all = TRUE)
+
+# Prepping the SLP portion of intRatings dataframe ----
+slpRatings_bySpeaker <- slpLong %>%
+  dplyr::select(!c(slpID, relRating)) %>%
+  dplyr::group_by(Speaker, Method) %>%
+  dplyr::summarise(rating = mean(rating),
+                   .groups = "rowwise")
+
+slpRatings_bySpeaker <- pivot_wider(slpRatings_bySpeaker, names_from = Method, values_from = rating) %>%
+  dplyr::rename(slp_EST = EST,
+                slp_VAS = VAS,
+                SpeakerID = Speaker)
+
+intRatings <- base::merge(intRatings,slpRatings_bySpeaker)
+
+```
+
+## Exporting Files
+```{r}
+# SLP Demographics
+rio::export(slpDemo, file = "Data/Shared Data/SLP_Demographics.csv")
+
+# SLP Correlation
+rio::export(slpCorr, file = "Data/Shared Data/SLP_Correlation.csv")
+
+# SpeakerIntelligibility
+rio::export(intRatings, file="Data/Shared Data/SpeakerIntelligibility.csv")
+
+# Removing unwanted variables
+rm(slpData, slpDataClean,slpLong,slpLong_EST,slpLong_firstRating,slpLong_secondRating,slpLong_VAS,slpRatings_bySpeaker,slpWide)
+```
+
+
