@@ -81,9 +81,12 @@ naive_Correlation %>%
 
 ```
 
-## SLP Distribution Plot for EST
+
+## SLP Distribution Plot 
 
 ```{r}
+
+# SLP Distribution Plot for Estimates
 
 distributionData <- slp_Correlation %>%
   dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "ALSF6", "HDM8", "ALSF9", "HDM10", "ALSF7", "AM1", "AM5", "AM3", "PDM12", "PDM9", "HDF5", "ALSM1", "HDF1", "ALSM4", "AF1", "PDM10", "PDF5", "PDF7", "HDM11"))
@@ -100,17 +103,12 @@ slp_EST.DistPlot <- distributionData %>%
   theme_classic() +
   theme(legend.position = "none")
 
-slp_EST.DistPlot
+# SLP Distribution Plot for VAS
 
-```
-
-## SLP Distribution Plot for VAS
-
-```{r}
-distributionData <- slp_Correlation %>%
+distributionData1 <- slp_Correlation %>%
   dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "HDM10", "ALSF6", "HDM8", "ALSF9", "AM1", "AM3", "ALSF7", "AM5", "PDM12", "HDF5", "ALSM1", "ALSM4", "HDF1", "AF1", "PDF7", "PDM9", "PDM10", "PDF5", "HDM11"))
 
-slp_VAS.DistPlot <- distributionData %>%
+slp_VAS.DistPlot <- distributionData1 %>%
   ggplot() +
   aes(x = slp_VAS, 
       y = Speaker,
@@ -122,159 +120,24 @@ slp_VAS.DistPlot <- distributionData %>%
   theme_classic() +
   theme(legend.position = "none")
 
-slp_VAS.DistPlot
-```
+# Creating Final plot
 
-## Combining and saving Distribution Plot
-
-```{r}
 DistributionPlot <- ggpubr::ggarrange(slp_EST.DistPlot, slp_VAS.DistPlot, ncol = 2, labels = c("A", "B"), nrow = 1) 
 
 DistributionPlot <- annotate_figure(DistributionPlot, top = text_grob("SLP Intelligibility Ratings per Speaker", 
                face = "bold", size = 14))
 
-DistributionPlot
-
 ggsave(filename = "Plots/Distribution_Plot.png", plot = DistributionPlot, height = 5, width = 10, unit = "in")
-```
 
-# Research Question #1
-Q1: Are SLP estimates of speech intelligibility predictive of naive listener estimations?
+# removing plots from environment
 
-Since the speakers are the common variable between the SLP and Naive listener task, intelligibility scores for each method were calculated by speaker.
-
-This first block explores the correlation matrix of SLP and Naive listener intelligibility ratings. 
-
-```{r}
-IntCorrelation <- IntSpeakerRatings %>%
-  dplyr::select(!SpeakerID)
-
-IntCorr_Matrix <- corrr::correlate(IntCorrelation,
-                                   method = "pearson",
-                                   use = "pairwise.complete.obs",
-                                   quiet = T) 
-IntCorr_Matrix
-```
-
-
-This next block is modeling SLP estimation as predictor of naive listener OT.
-
-```{r}
-SLP_ESTmodel <- lm(naive_OT ~ slp_EST, data= IntSpeakerRatings)
-summary(SLP_ESTmodel)
-performance::check_model(SLP_ESTmodel)
-```
-
-
-This next block is examining SLP VAS as a predictor of naive listener OT.
-
-```{r}
-
-SLP_VASmodel <- lm(naive_OT ~ slp_VAS, data = IntSpeakerRatings)
-summary(SLP_VASmodel)
-performance::check_model(SLP_VASmodel)
+rm(distributionData, distributionData1, slp_EST.DistPlot, slp_VAS.DistPlot)
 
 ```
 
-
-Naive OT Model comparisons
-
-```{r}
-performance::compare_performance(SLP_ESTmodel, SLP_VASmodel, rank = T)
-
-performance::test_performance(SLP_ESTmodel, SLP_VASmodel)
-```
-
-
-This next block is examining SLP EST as a predictor of naive listener VAS.
-
-```{r}
-SLP_ESTmodel_VAS <- lm(naive_VAS ~ slp_EST, data = IntSpeakerRatings)
-summary(SLP_ESTmodel_VAS)
-performance::check_model(SLP_ESTmodel_VAS)
-```
-
-This block examines SLP VAS as a predictor of naive listener VAS.
-
-```{r}
-SLP_VASmodel_VAS <- lm(naive_VAS ~ slp_VAS, data = IntSpeakerRatings)
-summary(SLP_VASmodel_VAS)
-performance::check_model(SLP_VASmodel_VAS)
-```
-
-Naive VAS model comparison
-
-```{r}
-performance::compare_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS, rank = T)
-
-performance::test_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS)
-```
-
-
-## R1 Plot
-
-
-```{r}
-## custom colors
-my_pal <- rcartocolor::carto_pal(n = 7, name = "Teal")[c(7, 4, 3, 2, 4)]
-
-IntSpeakerRatings_Long <- tidyr::pivot_longer(IntSpeakerRatings, 
-                                              cols = slp_EST:slp_VAS,
-                                              names_to = "Method",
-                                              values_to = "rating")
-
-IntSpeakerRatings_Long <- IntSpeakerRatings_Long %>%
-  dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS"))
-
-NaiveOT_plot <- IntSpeakerRatings_Long %>%
-  ggplot() +
-  aes(x = rating, 
-      y = naive_OT,
-      color = Method) +
-  geom_point() +
-  geom_smooth(method = "lm",
-              se = F) +
-  ylab("Naive (Transcription)") +
-  labs(color = "SLP Rating Method") +
-  scale_color_manual(values = my_pal) +
-  theme_classic() +
-  theme(legend.position = "bottom",
-        axis.title.x=element_blank())
-
-NaiveOT_plot
-
-ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(),height = 10, width = 10, units = "in", scale = .35)
-```
-
-
-# Research Question #2
-Q2: Is there a strong relationship between SLP intelligibility approximations with SLP VAS intelligibility ratings?
-
-```{r}
-rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
-```
-
-## Scatter plot
-```{r}
-slpMeasuresPlot <- slp_Correlation %>%
-  ggplot() +
-  aes(x = slp_EST, 
-      y = slp_VAS) +
-  geom_point() +
-  geom_smooth(method = "lm",
-              se = T) +
-  ylab("SLP (VAS)") +
-  xlab("SLP (EST)") +
-  labs(color = "SLP Rating Method") +
-  scale_color_manual(values = my_pal) +
-  theme_classic() +
-  theme(legend.position = "bottom",
-        axis.title.x=element_blank())
-
-slpMeasuresPlot
-```
 
 ## Plot of 4 Int Ratings
+
 ```{r}
 
 intRatings_Long1 <- IntSpeakerRatings %>%
@@ -376,6 +239,131 @@ ggsave("Plots/IntRatingsDistribution.png", plot = last_plot(),height = 5, width 
 ```
 
 
+# Research Question #1
+Q1: Are SLP estimates of speech intelligibility predictive of naive listener estimations?
+
+Since the speakers are the common variable between the SLP and Naive listener task, intelligibility scores for each method were calculated by speaker.
+
+## Primary Analysis
+
+### Correlation Matrix
+
+This first block explores the correlation matrix of SLP and Naive listener intelligibility ratings. 
+
+```{r}
+
+IntSpeakerRatings %>%
+  dplyr::select(!SpeakerID) %>%
+  corrr::correlate(method = "pearson", use = "pairwise.complete.obs", quiet = T)
+
+```
+
+### Modeling naive OT scores 
+
+This next block is modeling SLP estimation as predictor of naive listener OT.
+
+```{r}
+
+SLP_ESTmodel <- lm(naive_OT ~ slp_EST, data= IntSpeakerRatings)
+summary(SLP_ESTmodel)
+performance::check_model(SLP_ESTmodel)
+
+```
+
+
+This next block is examining SLP VAS as a predictor of naive listener OT.
+
+```{r}
+
+SLP_VASmodel <- lm(naive_OT ~ slp_VAS, data = IntSpeakerRatings)
+summary(SLP_VASmodel)
+performance::check_model(SLP_VASmodel)
+
+```
+
+
+Naive OT Model comparisons
+
+```{r}
+performance::compare_performance(SLP_ESTmodel, SLP_VASmodel, rank = T)
+
+performance::test_performance(SLP_ESTmodel, SLP_VASmodel)
+```
+
+
+## Additional Analysis: Modeling naive VAS scores
+
+This next block is examining SLP EST as a predictor of naive listener VAS.
+
+```{r}
+SLP_ESTmodel_VAS <- lm(naive_VAS ~ slp_EST, data = IntSpeakerRatings)
+summary(SLP_ESTmodel_VAS)
+performance::check_model(SLP_ESTmodel_VAS)
+```
+
+This block examines SLP VAS as a predictor of naive listener VAS.
+
+```{r}
+SLP_VASmodel_VAS <- lm(naive_VAS ~ slp_VAS, data = IntSpeakerRatings)
+summary(SLP_VASmodel_VAS)
+performance::check_model(SLP_VASmodel_VAS)
+```
+
+Naive VAS model comparison
+
+```{r}
+performance::compare_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS, rank = T)
+
+performance::test_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS)
+```
+
+
+## R1 Plot
+
+
+```{r}
+
+# custom colors
+my_pal <- rcartocolor::carto_pal(n = 7, name = "Teal")[c(7, 4, 3, 2, 4)]
+
+IntSpeakerRatings_Long <- tidyr::pivot_longer(IntSpeakerRatings, 
+                                              cols = slp_EST:slp_VAS,
+                                              names_to = "Method",
+                                              values_to = "rating")
+
+IntSpeakerRatings_Long <- IntSpeakerRatings_Long %>%
+  dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS"))
+
+NaiveOT_plot <- IntSpeakerRatings_Long %>%
+  ggplot() +
+  aes(x = rating, 
+      y = naive_OT,
+      color = Method) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              se = F) +
+  ylab("Naive (Transcription)") +
+  labs(color = "SLP Rating Method") +
+  scale_color_manual(values = my_pal) +
+  theme_classic() +
+  theme(legend.position = "bottom",
+        axis.title.x=element_blank())
+
+NaiveOT_plot
+
+ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(),height = 10, width = 10, units = "in", scale = .35)
+
+```
+
+
+# Research Question #2
+Q2: Is there a strong relationship between SLP intelligibility approximations with SLP VAS intelligibility ratings?
+
+```{r}
+rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
+```
+
+
 # Research Question #3
 Q3: Is there a strong relationship between naive listener OT scores with their VAS intelligibility estimation?
 
@@ -386,36 +374,30 @@ rmcorr::rmcorr(ListenerID, naive_OT, naive_VAS, naive_Correlation)
 # Research Question #4
 Q4: How reliable are these intelligibility measures (VAS ratings, approximations, and OT scores), as determined by intrarater and interrater agreement?
 
+## Intrarater Reliability
+
+### SLP VAS Ratings
+
 ```{r}
-#IntraRater Reliability for the SLPs VAS Rating
-slpVAS_Intra <- slp_Correlation %>%
-  dplyr::select(c(slp_VAS, slp_VAS.Rel)) %>%
-  dplyr::filter(slp_VAS.Rel != "")
-
-slpVAS_IntraCorr <- slpVAS_Intra %>%
-  corrr::correlate()
-
-slpVAS_IntraCorr
 
 cor.test(slp_Correlation$slp_VAS, slp_Correlation$slp_VAS.Rel, method = "pearson", use = "complete.obs")
+
 ```
 
+### SLP EST Ratings
+
 ```{r}
-#IntraRater Reliability for the SLPs EST Rating
-slpEST_Intra <- slp_Correlation %>%
-  dplyr::select(c(slp_EST, slp_EST.Rel)) %>%
-  dplyr::filter(slp_EST.Rel != "")
-
-slpEST_IntraCorr <- slpEST_Intra %>%
-  corrr::correlate()
-
-slpEST_IntraCorr
 
 cor.test(slp_Correlation$slp_EST, slp_Correlation$slp_EST.Rel, method = "pearson", use = "complete.obs")
+
 ```
 
+## Interrater Reliability 
+
+### SLPs VAS rating
+
 ```{r}
-#Interrater Reliability for the SLPs VAS rating
+
 slpVAS_Inter <- slp_Correlation %>%
   dplyr::select(!c(slp_VAS.Rel, slp_EST, slp_EST.Rel))
 
@@ -440,9 +422,10 @@ irr::icc(slpVAS_Inter_wide, model = "twoway",
 ```
 
 
+### SLPs Estimations
 
 ```{r}
-#Interrater Reliability for the SLPs EST rating
+
 slpEST_Inter <- slp_Correlation %>%
   dplyr::select(!c(slp_EST.Rel, slp_VAS, slp_VAS.Rel))
 
@@ -458,66 +441,15 @@ irr::icc(slpEST_Inter_wide, model = "twoway",
 irr::icc(slpEST_Inter_wide, model = "twoway",
   type="agreement",
   unit="single", r0=0, conf.level=0.95)
+
 ```
 
-## Plots Modeling slpEST and slpVAS to naive OT and naive VAS
-
-```{r}
-
-IntSpeakerRatings_Long <- tidyr::pivot_longer(IntSpeakerRatings, 
-                                              cols = slp_EST:slp_VAS,
-                                              names_to = "Method",
-                                              values_to = "rating")
-
-IntSpeakerRatings_Long <- IntSpeakerRatings_Long %>%
-  dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS"))
-
-NaiveOT_plot <- IntSpeakerRatings_Long %>%
-  ggplot() +
-  aes(x = rating, 
-      y = naive_OT,
-      color = Method) +
-  geom_point() +
-  geom_smooth(method = "lm", se = F) +
-  xlab("SLP Intelligibility Rating") +
-  ylab("Naive (Transcription)") +
-  labs(color = "SLP Rating Method") +
-  theme_classic() 
-
-NaiveOT_plot
-```
-
-## Naive VAS plot
-
-```{r}
-NaiveVAS_plot <- IntSpeakerRatings_Long %>%
-  ggplot() +
-  aes(x = rating, 
-      y = naive_VAS,
-      color = Method) +
-  geom_point() +
-  geom_smooth(method = "lm", se = F) +
-  xlab("SLP Intelligibility Rating") +
-  ylab("Naive Listener VAS Rating") +
-  labs(color = "SLP Rating Method") +
-  theme_classic()
-
-NaiveVAS_plot
-```
-
-## Combining RQ1 plot and exporting
-
-```{r}
-RQ1_Plot <- ggpubr::ggarrange(NaiveOT_plot, NaiveVAS_plot, ncol = 2, labels = c("A", "B"), nrow = 1, common.legend = T, legend = "bottom")
-
-RQ1_Plot
-
-ggsave(filename = "Plots/RQ1_Plot.png", plot = RQ1_Plot, height = 5, width = 10, unit = "in")
-```
+# Extra Data Visualization
 
 ## Creating Mean SLP Int plot
 
 ```{r}
+
 MeanInt_plot <- MeanSLPInt %>%
   ggplot() +
   aes(x = Method, 
@@ -531,94 +463,6 @@ MeanInt_plot <- MeanSLPInt %>%
 MeanInt_plot
 
 ggsave(filename = "Plots/SpeakerInt_Plot.png", plot = MeanInt_plot, height = 10, width = 10, unit = "in")
-```
 
-
-# Monster Plot - Facet Wrap
-```{r}
-
-monsterPlotData1 <- IntSpeakerRatings %>%
-  dplyr::select(SpeakerID, naive_OT)
-
-monsterPlotData2 <- slp_Correlation %>%
-  dplyr::rename(SpeakerID = Speaker) %>%
-  dplyr::select(slpID, SpeakerID, slp_EST, slp_VAS)
-
-monsterPlotData <- base::merge(monsterPlotData1, monsterPlotData2, all = T)
-
-rm(monsterPlotData1,monsterPlotData2)
-
-## custom colors
-my_pal <- rcartocolor::carto_pal(n = 7, name = "Teal")[c(7, 4, 3, 2, 5)]
-
-monsterPlot_long <- monsterPlotData %>%
-  ggplot() +
-  aes(x = slp_EST, 
-      y = naive_OT) +
-  geom_point() +
-  geom_smooth(method = "lm",
-              color=my_pal[5],
-              se = T) +
-  theme_classic() +
-  ylab("Naive (Transcription)") +
-  xlab("SLP (Estimation)") +
-  scale_color_manual(values = my_pal) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  scale_y_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  facet_wrap(facets = "slpID", ncol = 3) +
-  theme(panel.border = element_rect(color="black", fill=NA)) +
- theme(strip.text.x = element_blank())
-
-monsterPlot_long
-
-ggsave("Plots/MonsterPlo_long.png", plot = last_plot(),height = 14, width = 6.8, units = "in", scale = .4)
-
-monsterPlot_wide <- monsterPlotData %>%
-  ggplot() +
-  aes(x = slp_EST, 
-      y = naive_OT) +
-  geom_point() +
-  geom_smooth(method = "lm",
-              color=my_pal[5],
-              se = T) +
-  theme_classic() +
-  ylab("Naive (Transcription)") +
-  xlab("SLP (Estimation)") +
-  scale_color_manual(values = my_pal) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  scale_y_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  facet_wrap(facets = "slpID", ncol = 7)
-
-monsterPlot_wide
-
-ggsave("Plots/MonsterPlo_wide.png", plot = last_plot(),height = 6.8, width = 14, units = "in", scale = .4)
-
-```
-
-
-
-```{r}
-SLP_plot <- monsterPlotData %>%
-  dplyr::filter(slpID == "slp17" | slpID == "slp25") %>%
-  ggplot() +
-  aes(x = slp_EST, 
-      y = naive_OT) +
-  geom_point() +
-  geom_smooth(method = "lm",
-              color=my_pal[5],
-              se = T) +
-  theme_classic() +
-  ylab("Naive (Transcription)") +
-  xlab("SLP (Estimation)") +
-  scale_color_manual(values = my_pal) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  scale_y_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  facet_wrap(facets = "slpID", ncol = 1) +
-  theme(panel.border = element_rect(color="black", fill=NA)) +
- theme(strip.text.x = element_blank())
-
-SLP_plot
-
-ggsave("Plots/SLP_plot.png", plot = last_plot(),height = 10, width = 5.2, units = "in", scale = .4)
 ```
 
