@@ -20,6 +20,7 @@ library(ggridges) #install.packages("ggridges")
 library(rmcorr) #install.packages("rmcorr")
 library(irr) #install.packages("irr")
 library(ggpubr) #install.packages("ggpubr")
+library(RColorBrewer) #install.packages("RColorBrewer")
 
 ```
 
@@ -54,13 +55,16 @@ slp_Demographics %>%
 ## Naive Listener Demographics
 
 ```{r}
+
 naive_Demographics %>%
   furniture::table1(age, gender, race, ethnicity, famSLHDs)
+
 ```
 
 ## SLP descriptives
 
 ```{r}
+
 # Print mean and SD
 MeanSLPInt <- slp_Correlation %>%
   dplyr::group_by(Speaker) %>%
@@ -78,60 +82,6 @@ MeanSLPInt
 naive_Correlation %>%
   dplyr::group_by(SpeakerID) %>%
   dplyr::summarize(OT = mean(naive_OT), OT_SD = sd(naive_OT), VAS = mean(naive_VAS), VAS_SD = sd(naive_VAS))
-
-```
-
-
-## SLP Distribution Plot 
-
-```{r}
-
-# SLP Distribution Plot for Estimates
-
-distributionData <- slp_Correlation %>%
-  dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "ALSF6", "HDM8", "ALSF9", "HDM10", "ALSF7", "AM1", "AM5", "AM3", "PDM12", "PDM9", "HDF5", "ALSM1", "HDF1", "ALSM4", "AF1", "PDM10", "PDF5", "PDF7", "HDM11"))
-
-slp_EST.DistPlot <- distributionData %>%
-  ggplot() +
-  aes(x = slp_EST, 
-      y = Speaker,
-      fill = Speaker,
-      color = Speaker) +
-  xlim(c(0,100)) +
-  xlab("Estimation Rating") +
-  geom_density_ridges(alpha = 0.5) +
-  theme_classic() +
-  theme(legend.position = "none")
-
-# SLP Distribution Plot for VAS
-
-distributionData1 <- slp_Correlation %>%
-  dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "HDM10", "ALSF6", "HDM8", "ALSF9", "AM1", "AM3", "ALSF7", "AM5", "PDM12", "HDF5", "ALSM1", "ALSM4", "HDF1", "AF1", "PDF7", "PDM9", "PDM10", "PDF5", "HDM11"))
-
-slp_VAS.DistPlot <- distributionData1 %>%
-  ggplot() +
-  aes(x = slp_VAS, 
-      y = Speaker,
-      fill = Speaker,
-      color = Speaker) +
-  xlim(c(0,100)) +
-  xlab("Visual Analog Scale Rating") +
-  geom_density_ridges(alpha = 0.5) +
-  theme_classic() +
-  theme(legend.position = "none")
-
-# Creating Final plot
-
-DistributionPlot <- ggpubr::ggarrange(slp_EST.DistPlot, slp_VAS.DistPlot, ncol = 2, labels = c("A", "B"), nrow = 1) 
-
-DistributionPlot <- annotate_figure(DistributionPlot, top = text_grob("SLP Intelligibility Ratings per Speaker", 
-               face = "bold", size = 14))
-
-ggsave(filename = "Plots/Distribution_Plot.png", plot = DistributionPlot, height = 5, width = 10, unit = "in")
-
-# removing plots from environment
-
-rm(distributionData, distributionData1, slp_EST.DistPlot, slp_VAS.DistPlot)
 
 ```
 
@@ -244,9 +194,7 @@ Q1: Are SLP estimates of speech intelligibility predictive of naive listener est
 
 Since the speakers are the common variable between the SLP and Naive listener task, intelligibility scores for each method were calculated by speaker.
 
-## Primary Analysis
-
-### Correlation Matrix
+## Correlation Matrix
 
 This first block explores the correlation matrix of SLP and Naive listener intelligibility ratings. 
 
@@ -258,7 +206,7 @@ IntSpeakerRatings %>%
 
 ```
 
-### Modeling naive OT scores 
+## Modeling naive OT scores 
 
 This next block is modeling SLP estimation as predictor of naive listener OT.
 
@@ -463,6 +411,60 @@ MeanInt_plot <- MeanSLPInt %>%
 MeanInt_plot
 
 ggsave(filename = "Plots/SpeakerInt_Plot.png", plot = MeanInt_plot, height = 10, width = 10, unit = "in")
+
+```
+
+
+## SLP Distribution Plot 
+
+```{r}
+
+# SLP Distribution Plot for Estimates
+
+distributionData <- slp_Correlation %>%
+  dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "ALSF6", "HDM8", "ALSF9", "HDM10", "ALSF7", "AM1", "AM5", "AM3", "PDM12", "PDM9", "HDF5", "ALSM1", "HDF1", "ALSM4", "AF1", "PDM10", "PDF5", "PDF7", "HDM11"))
+
+slp_EST.DistPlot <- distributionData %>%
+  ggplot() +
+  aes(x = slp_EST, 
+      y = Speaker,
+      fill = Speaker,
+      color = Speaker) +
+  xlim(c(0,100)) +
+  xlab("Estimation Rating") +
+  geom_density_ridges(alpha = 0.5) +
+  theme_classic() +
+  theme(legend.position = "none")
+
+# SLP Distribution Plot for VAS
+
+distributionData1 <- slp_Correlation %>%
+  dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "HDM10", "ALSF6", "HDM8", "ALSF9", "AM1", "AM3", "ALSF7", "AM5", "PDM12", "HDF5", "ALSM1", "ALSM4", "HDF1", "AF1", "PDF7", "PDM9", "PDM10", "PDF5", "HDM11"))
+
+slp_VAS.DistPlot <- distributionData1 %>%
+  ggplot() +
+  aes(x = slp_VAS, 
+      y = Speaker,
+      fill = Speaker,
+      color = Speaker) +
+  xlim(c(0,100)) +
+  xlab("Visual Analog Scale Rating") +
+  geom_density_ridges(alpha = 0.5) +
+  theme_classic() +
+  theme(legend.position = "none")
+
+# Creating Final plot
+
+DistributionPlot <- ggpubr::ggarrange(slp_EST.DistPlot, slp_VAS.DistPlot, ncol = 2, labels = c("A", "B"), nrow = 1) 
+
+DistributionPlot <- annotate_figure(DistributionPlot, top = text_grob("SLP Intelligibility Ratings per Speaker", 
+               face = "bold", size = 14))
+
+ggsave(filename = "Plots/Distribution_Plot.png", plot = DistributionPlot, height = 5, width = 10, unit = "in")
+
+# removing plots from environment
+
+rm(distributionData, distributionData1, slp_EST.DistPlot, slp_VAS.DistPlot)
 
 ```
 
