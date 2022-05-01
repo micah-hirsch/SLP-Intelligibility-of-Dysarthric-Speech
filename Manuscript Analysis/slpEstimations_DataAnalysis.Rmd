@@ -21,6 +21,7 @@ library(rmcorr) #install.packages("rmcorr")
 library(irr) #install.packages("irr")
 library(ggpubr) #install.packages("ggpubr")
 library(RColorBrewer) #install.packages("RColorBrewer")
+library(extrafont) # install.packages("extrafont")
 
 ```
 
@@ -86,7 +87,7 @@ naive_Correlation %>%
 ```
 
 
-## Plot of 4 Int Ratings
+## Descriptives Plot
 
 ```{r}
 
@@ -121,9 +122,6 @@ intRatings_Long <- base::rbind(intRatings_Long1, intRatings_Long2) %>%
                                                 "Naive (VAS)",
                                                 "slp_VAS" = "SLP (VAS)",
                                                 "slp_EST" = "SLP (Estimations)"))
-
-
-library(extrafont) # install.packages('extrafont')
 
 ## custom colors
 my_pal <- rcartocolor::carto_pal(n = 7, name = "Teal")[c(7, 5, 3, 2, 4)]
@@ -184,7 +182,7 @@ ggplot(data = intRatings_Long,
   theme(text=element_text(size = 13, 
         family="Arial Bold"))
 
-ggsave("Plots/IntRatingsDistribution.png", plot = last_plot(),height = 5, width = 7, units = "in", scale = .8)
+# ggsave("Plots/IntRatingsDistribution.png", plot = last_plot(),height = 5, width = 7, units = "in", scale = .8)
 
 ```
 
@@ -265,41 +263,39 @@ performance::compare_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS, rank = T)
 performance::test_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS)
 ```
 
-
-## R1 Plot
-
+## RQ1 Plot
 
 ```{r}
 
 # custom colors
-my_pal <- rcartocolor::carto_pal(n = 7, name = "Teal")[c(7, 4, 3, 2, 4)]
+my_pal <- c("#3C1642", "#086375", "#1DD3B0", "#AFFC41")
 
-IntSpeakerRatings_Long <- tidyr::pivot_longer(IntSpeakerRatings, 
-                                              cols = slp_EST:slp_VAS,
-                                              names_to = "Method",
-                                              values_to = "rating")
-
-IntSpeakerRatings_Long <- IntSpeakerRatings_Long %>%
+IntSpeakerRatings_Long <- IntSpeakerRatings %>%
+  tidyr::pivot_longer(cols = slp_EST:slp_VAS, names_to = "Method",values_to = "rating") %>%
   dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS"))
 
 NaiveOT_plot <- IntSpeakerRatings_Long %>%
   ggplot() +
   aes(x = rating, 
       y = naive_OT,
-      color = Method) +
+      color = Method,
+      ymin = 0,
+      ymax = 100,
+      xmin = 0,
+      xmax = 100) +
   geom_point() +
   geom_smooth(method = "lm",
               se = F) +
-  ylab("Naive (Transcription)") +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  ylab("Naïve Intelligibilty (Transcription)") +
   labs(color = "SLP Rating Method") +
   scale_color_manual(values = my_pal) +
+  coord_equal() +
   theme_classic() +
   theme(legend.position = "bottom",
         axis.title.x=element_blank())
 
-NaiveOT_plot
-
-ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(),height = 10, width = 10, units = "in", scale = .35)
+ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(),height = 5, width = 5, units = "in")
 
 ```
 
@@ -308,7 +304,9 @@ ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(),height = 10, width = 10, 
 Q2: Is there a strong relationship between SLP intelligibility approximations with SLP VAS intelligibility ratings?
 
 ```{r}
+
 rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
+
 ```
 
 
@@ -316,7 +314,9 @@ rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
 Q3: Is there a strong relationship between naive listener OT scores with their VAS intelligibility estimation?
 
 ```{r}
+
 rmcorr::rmcorr(ListenerID, naive_OT, naive_VAS, naive_Correlation)
+
 ```
 
 # Research Question #4
