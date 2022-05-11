@@ -83,8 +83,6 @@ slp_demo2 <- slp_Demographics %>%
   purrr::map_df(.f = ~ broom::tidy(summary(.x)), .id = "Variable") %>%
   dplyr::select(!c(q1, median, q3))
 
-  
-
 ```
 
 ## Naive Listener Demographics
