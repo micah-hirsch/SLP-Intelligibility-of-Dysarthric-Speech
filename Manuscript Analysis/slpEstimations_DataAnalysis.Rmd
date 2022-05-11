@@ -3,7 +3,7 @@ title: "SLP Estimations: Data Analysis"
 output: html_notebook
 ---
 
-This is the analysis script for the manuscript. Much of the analysis and code is the same from the 2021 ASHA Convention poster presentation. However, some of the visualizations changed.
+This is the analysis script for the manuscript entitled "The reliability and validity of SLPs' esitmations of speech intelligibility in dysarthria". Much of the analysis and code is the same from the 2021 ASHA Convention poster presentation. However, some of the data visualizations and tables have changed.
 
 # Packages
 
@@ -22,6 +22,8 @@ library(irr) #install.packages("irr")
 library(ggpubr) #install.packages("ggpubr")
 library(RColorBrewer) #install.packages("RColorBrewer")
 library(extrafont) # install.packages("extrafont")
+library(gt) #install.packages("gt")
+#library(glue) #install.packages("glue")
 
 ```
 
@@ -48,8 +50,40 @@ naive_Correlation <- rio::import("Shared Data/NaiveListener_Correlation.csv")
 
 ```{r}
 
-slp_Demographics %>%
-  furniture::table1(age, gender, race, ethnicity, yearsExp, medSetting)
+slp_gender <- slp_Demographics %>%
+  dplyr::select(gender) %>%
+  dplyr::group_by(gender) %>%
+  dplyr::summarize(Frequency = n()) %>%
+  dplyr::rename(Category = "gender") %>%
+  dplyr::mutate(Group = "Gender")
+
+slp_race <- slp_Demographics %>%
+  dplyr::select(race) %>%
+  dplyr::group_by(race) %>%
+  dplyr::summarize(Frequency = n()) %>%
+  dplyr::rename(Category = "race") %>%
+  dplyr::mutate(Group = "Race")
+
+slp_ethnicity <- slp_Demographics %>%
+  dplyr::select(ethnicity) %>%
+  dplyr::group_by(ethnicity) %>%
+  dplyr::summarize(Frequency = n()) %>%
+  dplyr::rename(Category = "ethnicity") %>%
+  dplyr::mutate(Group = "Ethnicity")
+
+slp_demo1 <- dplyr::full_join(slp_gender, slp_race)
+
+slp_demo1 <- dplyr::full_join(slp_demo1, slp_ethnicity)
+  
+slp_demo_table <- slp_demo1 %>%
+  gt::gt(rowname_col = "Category", groupname_col = "Group")
+
+slp_demo2 <- slp_Demographics %>%
+  dplyr::select(age, yearsExp) %>%
+  purrr::map_df(.f = ~ broom::tidy(summary(.x)), .id = "Variable") %>%
+  dplyr::select(!c(q1, median, q3))
+
+  
 
 ```
 
