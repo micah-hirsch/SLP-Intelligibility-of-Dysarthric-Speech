@@ -30,6 +30,7 @@ library(gt) #install.packages("gt")
 # Importing the datasets
 
 This chunk contains all of the dataframes needed for the stat analysis.
+
 ```{r}
 # This data is used for question #1
 IntSpeakerRatings <- rio::import("Shared Data/SpeakerIntelligibility.csv")
@@ -55,7 +56,9 @@ slp_gender <- slp_Demographics %>%
   dplyr::group_by(gender) %>%
   dplyr::summarize(Frequency = n()) %>%
   dplyr::rename(Category = "gender") %>%
-  dplyr::mutate(Group = "Gender")
+  dplyr::mutate(Group = "Gender",
+                Category = fct_relevel(Category, c("Woman", "Man", "Prefer not to say"))) %>%
+  dplyr::arrange(Category)
 
 slp_race <- slp_Demographics %>%
   dplyr::select(race) %>%
@@ -79,10 +82,13 @@ slp_demo_table <- slp_demo1 %>%
   gt::gt(rowname_col = "Category", groupname_col = "Group")
 
 slp_demo2 <- slp_Demographics %>%
-  dplyr::select(age, yearsExp) %>%
-  purrr::map_df(.f = ~ broom::tidy(summary(.x)), .id = "Variable") %>%
-  dplyr::select(!c(q1, median, q3))
-
+  dplyr::select(c(age, yearsExp)) %>%
+  tidyr::pivot_longer(cols = c(age, yearsExp), names_to = "Variable", values_to = "Value") %>%
+  dplyr::mutate(Variable = recode(Variable, age = "Age", yearsExp = "Years Experience")) %>%
+  dplyr::group_by(Variable) %>%
+  dplyr::summarize(Mean = mean(Value), SD = sd(Value), Min = min(Value), Max = max(Value)) %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(Mean, SD), decimals = 2)
 ```
 
 ## Naive Listener Demographics
