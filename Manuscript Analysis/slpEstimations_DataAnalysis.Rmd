@@ -19,10 +19,12 @@ library(patchwork) # install.packages("patchwork")
 library(ggridges) #install.packages("ggridges")
 library(rmcorr) #install.packages("rmcorr")
 library(irr) #install.packages("irr")
+library(Hmisc) #install.packages("Hmisc")
 library(ggpubr) #install.packages("ggpubr")
 library(RColorBrewer) #install.packages("RColorBrewer")
 library(extrafont) # install.packages("extrafont")
 library(gt) #install.packages("gt")
+library(sjPlot) #install.packages("sjPlot")
 #library(glue) #install.packages("glue")
 
 ```
@@ -89,6 +91,9 @@ slp_demo2 <- slp_Demographics %>%
   dplyr::summarize(Mean = mean(Value), SD = sd(Value), Min = min(Value), Max = max(Value)) %>%
   gt::gt() %>%
   gt::fmt_number(columns = c(Mean, SD), decimals = 2)
+
+rm(slp_gender, slp_race, slp_ethnicity, slp_demo1)
+
 ```
 
 ## Naive Listener Demographics
@@ -140,6 +145,7 @@ naive_demo_table <- naive_demo3 %>%
 naive_age <- naive_Demographics %>%
   dplyr::summarize(Age_mean = mean(age), Age_sd = sd(age), Age_min = min(age), Age_max = max(age))
 
+rm(naive_gender, naive_race, naive_ethnicity, naive_famSLHDs, slp_demo1, naive_demo2, naive_demo3)
 
 ```
 
@@ -148,12 +154,12 @@ naive_age <- naive_Demographics %>%
 ```{r}
 
 # Print mean and SD
-MeanSLPInt <- slp_Correlation %>%
+slp_Correlation %>%
   dplyr::group_by(Speaker) %>%
   dplyr::summarize(VAS = mean(slp_VAS, na.rm = T), VAS_SD = sd(slp_VAS, na.rm = T),
                    EST = mean(slp_EST, na.rm =T ), EST_SD = sd(slp_EST, na.rm = T))
 
-MeanSLPInt
+
 
 ```
 
@@ -263,7 +269,7 @@ ggplot(data = intRatings_Long,
   theme(text=element_text(size = 13, 
         family="Arial Bold"))
 
-# ggsave("Plots/IntRatingsDistribution.png", plot = last_plot(),height = 5, width = 7, units = "in", scale = .8)
+ggsave("Plots/IntRatingsDistribution.png", plot = last_plot(),height = 5, width = 7, units = "in", scale = .8)
 
 ```
 
@@ -279,9 +285,24 @@ This first block explores the correlation matrix of SLP and Naive listener intel
 
 ```{r}
 
-IntSpeakerRatings %>%
+CorrMatrix <- IntSpeakerRatings %>%
   dplyr::select(!SpeakerID) %>%
-  corrr::correlate(method = "pearson", use = "pairwise.complete.obs", quiet = T)
+  as.matrix() %>%
+  Hmisc::rcorr() 
+
+CorrMatrixP <- CorrMatrix$P < .05
+
+CorrMatrix <- CorrMatrix$r
+
+CorrMatrix <- CorrMatrix %>%
+  as.data.frame() %>%
+  dplyr::mutate(naive_VAS = as.numeric(naive_VAS),
+                naive_OT = as.numeric(naive_OT),
+                slp_EST = as.numeric(slp_EST),
+                slp_VAS = as.numeric(slp_VAS)) %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(naive_VAS, naive_OT, slp_EST, slp_VAS), decimals = 2) %>%
+  gt::gtsave("Tables/CorrMatrix.html")
 
 ```
 
@@ -294,6 +315,8 @@ This next block is modeling SLP estimation as predictor of naive listener OT.
 SLP_ESTmodel <- lm(naive_OT ~ slp_EST, data= IntSpeakerRatings)
 summary(SLP_ESTmodel)
 performance::check_model(SLP_ESTmodel)
+sjPlot::tab_model(SLP_ESTmodel, file = "Tables/Estimation_model.html")
+
 
 ```
 
@@ -305,6 +328,7 @@ This next block is examining SLP VAS as a predictor of naive listener OT.
 SLP_VASmodel <- lm(naive_OT ~ slp_VAS, data = IntSpeakerRatings)
 summary(SLP_VASmodel)
 performance::check_model(SLP_VASmodel)
+sjPlot::tab_model(SLP_VASmodel, file = "Tables/VAS_model.html")
 
 ```
 
