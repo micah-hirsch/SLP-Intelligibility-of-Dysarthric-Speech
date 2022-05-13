@@ -98,6 +98,49 @@ slp_demo2 <- slp_Demographics %>%
 naive_Demographics %>%
   furniture::table1(age, gender, race, ethnicity, famSLHDs)
 
+naive_gender <- naive_Demographics %>%
+  dplyr::select(gender) %>%
+  dplyr::group_by(gender) %>%
+  dplyr::summarize(Frequency = n()) %>%
+  dplyr::rename(Category = "gender") %>%
+  dplyr::mutate(Group = "Gender",
+                Category = fct_relevel(Category, c("Woman", "Man", "Prefer not to say"))) %>%
+  dplyr::arrange(Category)
+
+naive_race <- naive_Demographics %>%
+  dplyr::select(race) %>%
+  dplyr::group_by(race) %>%
+  dplyr::summarize(Frequency = n()) %>%
+  dplyr::rename(Category = "race") %>%
+  dplyr::mutate(Group = "Race")
+
+naive_ethnicity <- naive_Demographics %>%
+  dplyr::select(ethnicity) %>%
+  dplyr::group_by(ethnicity) %>%
+  dplyr::summarize(Frequency = n()) %>%
+  dplyr::rename(Category = "ethnicity") %>%
+  dplyr::mutate(Group = "Ethnicity")
+
+naive_famSLHDs <- naive_Demographics %>%
+  dplyr::select(famSLHDs) %>%
+  dplyr::group_by(famSLHDs) %>%
+  dplyr::summarize(Frequency = n()) %>%
+  dplyr::rename(Category = "famSLHDs") %>%
+  dplyr::mutate(Group = "Familiar with Comm Disorders")
+
+naive_demo1 <- dplyr::full_join(naive_gender, naive_race)
+
+naive_demo2 <- dplyr::full_join(naive_demo1, naive_ethnicity)
+
+naive_demo3 <- dplyr::full_join(naive_demo2, naive_famSLHDs)
+
+naive_demo_table <- naive_demo3 %>%
+  gt::gt(rowname_col = "Category", groupname_col = "Group")
+
+naive_age <- naive_Demographics %>%
+  dplyr::summarize(Age_mean = mean(age), Age_sd = sd(age), Age_min = min(age), Age_max = max(age))
+
+
 ```
 
 ## SLP descriptives
