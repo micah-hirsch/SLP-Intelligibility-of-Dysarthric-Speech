@@ -11,21 +11,16 @@ This is the analysis script for the manuscript entitled "The reliability and val
 
 library(rio) # install.packages("rio")
 library(tidyverse) # install.packages("tidyverse")
-library(corrr) # install.packages("corrr")
 library(performance) # install.packages("performance")
-library(furniture) #install.packages("furniture")
 library(see) # install.packages("see")
 library(patchwork) # install.packages("patchwork")
-library(ggridges) #install.packages("ggridges")
 library(rmcorr) #install.packages("rmcorr")
 library(irr) #install.packages("irr")
 library(Hmisc) #install.packages("Hmisc")
 library(ggpubr) #install.packages("ggpubr")
-library(RColorBrewer) #install.packages("RColorBrewer")
 library(extrafont) # install.packages("extrafont")
 library(gt) #install.packages("gt")
 library(sjPlot) #install.packages("sjPlot")
-#library(glue) #install.packages("glue")
 
 ```
 
@@ -535,7 +530,6 @@ irr::icc(slpVAS_Inter_wide, model = "twoway",
   unit="single", r0=0, conf.level=0.95)
 ```
 
-
 ### SLPs Estimations
 
 ```{r}
@@ -555,82 +549,6 @@ irr::icc(slpEST_Inter_wide, model = "twoway",
 irr::icc(slpEST_Inter_wide, model = "twoway",
   type="agreement",
   unit="single", r0=0, conf.level=0.95)
-
-```
-
-# Extra Data Visualization
-
-## Creating Mean SLP Int plot
-
-```{r}
-
-MeanInt_plot <- MeanSLPInt %>%
-  ggplot() +
-  aes(x = Method, 
-      y = Intelligibility,
-      group = Speaker,
-      color = Speaker) +
-  geom_point() +
-  geom_line() +
-  theme_classic()
-
-MeanInt_plot
-
-ggsave(filename = "Plots/SpeakerInt_Plot.png", plot = MeanInt_plot, height = 10, width = 10, unit = "in")
-
-```
-
-
-## SLP Distribution Plot 
-
-```{r}
-
-# SLP Distribution Plot for Estimates
-
-distributionData <- slp_Correlation %>%
-  dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "ALSF6", "HDM8", "ALSF9", "HDM10", "ALSF7", "AM1", "AM5", "AM3", "PDM12", "PDM9", "HDF5", "ALSM1", "HDF1", "ALSM4", "AF1", "PDM10", "PDF5", "PDF7", "HDM11"))
-
-slp_EST.DistPlot <- distributionData %>%
-  ggplot() +
-  aes(x = slp_EST, 
-      y = Speaker,
-      fill = Speaker,
-      color = Speaker) +
-  xlim(c(0,100)) +
-  xlab("Estimation Rating") +
-  geom_density_ridges(alpha = 0.5) +
-  theme_classic() +
-  theme(legend.position = "none")
-
-# SLP Distribution Plot for VAS
-
-distributionData1 <- slp_Correlation %>%
-  dplyr::mutate(Speaker = fct_relevel(Speaker, levels = "AF9", "HDM10", "ALSF6", "HDM8", "ALSF9", "AM1", "AM3", "ALSF7", "AM5", "PDM12", "HDF5", "ALSM1", "ALSM4", "HDF1", "AF1", "PDF7", "PDM9", "PDM10", "PDF5", "HDM11"))
-
-slp_VAS.DistPlot <- distributionData1 %>%
-  ggplot() +
-  aes(x = slp_VAS, 
-      y = Speaker,
-      fill = Speaker,
-      color = Speaker) +
-  xlim(c(0,100)) +
-  xlab("Visual Analog Scale Rating") +
-  geom_density_ridges(alpha = 0.5) +
-  theme_classic() +
-  theme(legend.position = "none")
-
-# Creating Final plot
-
-DistributionPlot <- ggpubr::ggarrange(slp_EST.DistPlot, slp_VAS.DistPlot, ncol = 2, labels = c("A", "B"), nrow = 1) 
-
-DistributionPlot <- annotate_figure(DistributionPlot, top = text_grob("SLP Intelligibility Ratings per Speaker", 
-               face = "bold", size = 14))
-
-ggsave(filename = "Plots/Distribution_Plot.png", plot = DistributionPlot, height = 5, width = 10, unit = "in")
-
-# removing plots from environment
-
-rm(distributionData, distributionData1, slp_EST.DistPlot, slp_VAS.DistPlot)
 
 ```
 
