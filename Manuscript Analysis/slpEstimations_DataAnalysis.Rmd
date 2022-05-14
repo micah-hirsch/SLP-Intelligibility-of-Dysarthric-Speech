@@ -411,7 +411,7 @@ ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, u
 # Research Question #2
 
 ## Correlation Analysis
-Q2: Is there a strong relationship between SLP intelligibility approximations with SLP VAS intelligibility ratings?
+Q2: Is there a strong relationship between SLP intelligibility percent estimates with SLP VAS intelligibility ratings?
 
 ```{r}
 
@@ -423,13 +423,30 @@ rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
 
 ```{r}
 
+slp_Correlation %>%
+  dplyr::group_by(slpID) %>%
+  ggplot() +
+  aes(x = slp_VAS,
+      y = slp_EST) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_line(method = "lm", stat ="smooth", color = my_pal[2], aes(group = slpID), alpha = .4) +
+  geom_smooth(method = "lm", se = F, color = my_pal[2]) +
+  xlab("SLP VAS Rating") +
+  ylab("SLP Percent Estimates") +
+  coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
+  theme_classic() +
+  theme(aspect.ratio = 1) 
 
+ggsave("Plots/RQ2_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
 
 ```
 
 
 
 # Research Question #3
+
+## Repeated Measures Correlation
+
 Q3: Is there a strong relationship between naive listener OT scores with their VAS intelligibility estimation?
 
 ```{r}
@@ -437,6 +454,10 @@ Q3: Is there a strong relationship between naive listener OT scores with their V
 rmcorr::rmcorr(ListenerID, naive_OT, naive_VAS, naive_Correlation)
 
 ```
+
+## Scatterplot
+
+
 
 # Research Question #4
 Q4: How reliable are these intelligibility measures (VAS ratings, approximations, and OT scores), as determined by intrarater and interrater agreement?
