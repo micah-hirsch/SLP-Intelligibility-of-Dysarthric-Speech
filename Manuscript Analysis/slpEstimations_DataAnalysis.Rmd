@@ -275,6 +275,7 @@ ggsave("Plots/IntRatingsDistribution.png", plot = last_plot(),height = 5, width 
 
 
 # Research Question #1
+
 Q1: Are SLP estimates of speech intelligibility predictive of naive listener estimations?
 
 Since the speakers are the common variable between the SLP and Naive listener task, intelligibility scores for each method were calculated by speaker.
@@ -373,17 +374,18 @@ performance::test_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS)
 ```{r}
 
 # custom colors
-my_pal <- c("#3C1642", "#086375", "#1DD3B0", "#AFFC41")
+my_pal <- c("#3C1642", "#B147C2", "#086375", "#086375")
 
 IntSpeakerRatings_Long <- IntSpeakerRatings %>%
   tidyr::pivot_longer(cols = slp_EST:slp_VAS, names_to = "Method",values_to = "rating") %>%
   dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS"))
 
-NaiveOT_plot <- IntSpeakerRatings_Long %>%
+IntSpeakerRatings_Long %>%
   ggplot() +
   aes(x = rating, 
       y = naive_OT,
       color = Method,
+      shape = Method,
       ymin = 0,
       ymax = 100,
       xmin = 0,
@@ -392,20 +394,23 @@ NaiveOT_plot <- IntSpeakerRatings_Long %>%
   geom_smooth(method = "lm",
               se = F) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  ylab("Naïve Intelligibilty (Transcription)") +
-  labs(color = "SLP Rating Method") +
+  ylab("Naïve Listener Intelligibilty (Transcription)") +
+  labs(color = "SLP Rating Method", shape = "SLP Rating Method") +
   scale_color_manual(values = my_pal) +
+  scale_shape_manual(values = c(1, 16)) +
   coord_equal() +
   theme_classic() +
   theme(legend.position = "bottom",
         axis.title.x=element_blank())
 
-ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(),height = 5, width = 5, units = "in")
+ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
 
 ```
 
 
 # Research Question #2
+
+## Correlation Analysis
 Q2: Is there a strong relationship between SLP intelligibility approximations with SLP VAS intelligibility ratings?
 
 ```{r}
@@ -413,6 +418,15 @@ Q2: Is there a strong relationship between SLP intelligibility approximations wi
 rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
 
 ```
+
+## Scatterplot
+
+```{r}
+
+
+
+```
+
 
 
 # Research Question #3
