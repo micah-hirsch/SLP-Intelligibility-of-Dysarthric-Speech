@@ -1758,96 +1758,20 @@ pre code {
 <h1>Packages</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5gYGAifQ== -->
-<pre class="r"><code></code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiV2FybmluZyBtZXNzYWdlOlxuUiBncmFwaGljcyBlbmdpbmUgdmVyc2lvbiAxNCBpcyBub3Qgc3VwcG9ydGVkIGJ5IHRoaXMgdmVyc2lvbiBvZiBSU3R1ZGlvLiBUaGUgUGxvdHMgdGFiIHdpbGwgYmUgZGlzYWJsZWQgdW50aWwgYSBuZXdlciB2ZXJzaW9uIG9mIFJTdHVkaW8gaXMgaW5zdGFsbGVkLiBcbiJ9 -->
-<pre><code>Warning message:
-R graphics engine version 14 is not supported by this version of RStudio. The Plots tab will be disabled until a newer version of RStudio is installed. </code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShyaW8pICMgaW5zdGFsbC5wYWNrYWdlcyhcInJpb1wiKVxuYGBgIn0= -->
-<pre class="r"><code>library(rio) # install.packages(&quot;rio&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiVGhlIGZvbGxvd2luZyByaW8gc3VnZ2VzdGVkIHBhY2thZ2VzIGFyZSBub3QgaW5zdGFsbGVkOiDigJhhcnJvd+KAmSwg4oCYZmVhdGhlcuKAmSwg4oCYZnN04oCZLCDigJhoZXhWaWV34oCZLCDigJhwemZ44oCZLCDigJhyZWFkT0RT4oCZLCDigJhybWF0aW/igJlcblVzZSAnaW5zdGFsbF9mb3JtYXRzKCknIHRvIGluc3RhbGwgdGhlbVxuIn0= -->
-<pre><code>The following rio suggested packages are not installed: ‘arrow’, ‘feather’, ‘fst’, ‘hexView’, ‘pzfx’, ‘readODS’, ‘rmatio’
-Use &#39;install_formats()&#39; to install them</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpICMgaW5zdGFsbC5wYWNrYWdlcyhcInRpZHl2ZXJzZVwiKVxuYGBgIn0= -->
-<pre class="r"><code>library(tidyverse) # install.packages(&quot;tidyverse&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJlZCBTMyBtZXRob2RzIG92ZXJ3cml0dGVuIGJ5ICdkYnBseXInOlxuICBtZXRob2QgICAgICAgICBmcm9tXG4gIHByaW50LnRibF9sYXp5ICAgICBcbiAgcHJpbnQudGJsX3NxbCAgICAgIFxu4pSA4pSAIEF0dGFjaGluZyBwYWNrYWdlcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgdGlkeXZlcnNlIDEuMy4xIOKUgOKUgFxu4pyTIGdncGxvdDIgMy4zLjUgICAgIOKckyBwdXJyciAgIDAuMy40XG7inJMgdGliYmxlICAzLjEuNiAgICAg4pyTIGRwbHlyICAgMS4wLjhcbuKckyB0aWR5ciAgIDEuMi4wICAgICDinJMgc3RyaW5nciAxLjQuMFxu4pyTIHJlYWRyICAgMi4xLjIgICAgIOKckyBmb3JjYXRzIDAuNS4xXG5wYWNrYWdlIOKAmHRpZHly4oCZIHdhcyBidWlsdCB1bmRlciBSIHZlcnNpb24gNC4xLjJwYWNrYWdlIOKAmGRwbHly4oCZIHdhcyBidWlsdCB1bmRlciBSIHZlcnNpb24gNC4xLjLilIDilIAgQ29uZmxpY3RzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgCB0aWR5dmVyc2VfY29uZmxpY3RzKCkg4pSA4pSAXG54IGRwbHlyOjpmaWx0ZXIoKSBtYXNrcyBzdGF0czo6ZmlsdGVyKClcbnggZHBseXI6OmxhZygpICAgIG1hc2tzIHN0YXRzOjpsYWcoKVxuIn0= -->
-<pre><code>Registered S3 methods overwritten by &#39;dbplyr&#39;:
-  method         from
-  print.tbl_lazy     
-  print.tbl_sql      
-── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.1 ──
-✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-✓ tibble  3.1.6     ✓ dplyr   1.0.8
-✓ tidyr   1.2.0     ✓ stringr 1.4.0
-✓ readr   2.1.2     ✓ forcats 0.5.1
-package ‘tidyr’ was built under R version 4.1.2package ‘dplyr’ was built under R version 4.1.2── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-x dplyr::filter() masks stats::filter()
-x dplyr::lag()    masks stats::lag()</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShwZXJmb3JtYW5jZSkgIyBpbnN0YWxsLnBhY2thZ2VzKFwicGVyZm9ybWFuY2VcIilcbmxpYnJhcnkoc2VlKSAjIGluc3RhbGwucGFja2FnZXMoXCJzZWVcIilcbmBgYCJ9 -->
-<pre class="r"><code>library(performance) # install.packages(&quot;performance&quot;)
-library(see) # install.packages(&quot;see&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoicGFja2FnZSDigJhzZWXigJkgd2FzIGJ1aWx0IHVuZGVyIFIgdmVyc2lvbiA0LjEuMlxuIn0= -->
-<pre><code>package ‘see’ was built under R version 4.1.2</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShwYXRjaHdvcmspICMgaW5zdGFsbC5wYWNrYWdlcyhcInBhdGNod29ya1wiKVxubGlicmFyeShybWNvcnIpICNpbnN0YWxsLnBhY2thZ2VzKFwicm1jb3JyXCIpXG5saWJyYXJ5KGlycikgI2luc3RhbGwucGFja2FnZXMoXCJpcnJcIilcbmBgYCJ9 -->
-<pre class="r"><code>library(patchwork) # install.packages(&quot;patchwork&quot;)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5saWJyYXJ5KHJpbykgIyBpbnN0YWxsLnBhY2thZ2VzKFwicmlvXCIpXG5saWJyYXJ5KHRpZHl2ZXJzZSkgIyBpbnN0YWxsLnBhY2thZ2VzKFwidGlkeXZlcnNlXCIpXG5saWJyYXJ5KHBlcmZvcm1hbmNlKSAjIGluc3RhbGwucGFja2FnZXMoXCJwZXJmb3JtYW5jZVwiKVxubGlicmFyeShzZWUpICMgaW5zdGFsbC5wYWNrYWdlcyhcInNlZVwiKVxubGlicmFyeShwYXRjaHdvcmspICMgaW5zdGFsbC5wYWNrYWdlcyhcInBhdGNod29ya1wiKVxubGlicmFyeShybWNvcnIpICNpbnN0YWxsLnBhY2thZ2VzKFwicm1jb3JyXCIpXG5saWJyYXJ5KGlycikgI2luc3RhbGwucGFja2FnZXMoXCJpcnJcIilcbmxpYnJhcnkoSG1pc2MpICNpbnN0YWxsLnBhY2thZ2VzKFwiSG1pc2NcIilcbmxpYnJhcnkoZ2dwdWJyKSAjaW5zdGFsbC5wYWNrYWdlcyhcImdncHViclwiKVxubGlicmFyeShleHRyYWZvbnQpICMgaW5zdGFsbC5wYWNrYWdlcyhcImV4dHJhZm9udFwiKVxubGlicmFyeShndCkgI2luc3RhbGwucGFja2FnZXMoXCJndFwiKVxubGlicmFyeShzalBsb3QpICNpbnN0YWxsLnBhY2thZ2VzKFwic2pQbG90XCIpXG5cbmBgYCJ9 -->
+<pre class="r"><code>
+library(rio) # install.packages(&quot;rio&quot;)
+library(tidyverse) # install.packages(&quot;tidyverse&quot;)
+library(performance) # install.packages(&quot;performance&quot;)
+library(see) # install.packages(&quot;see&quot;)
+library(patchwork) # install.packages(&quot;patchwork&quot;)
 library(rmcorr) #install.packages(&quot;rmcorr&quot;)
-library(irr) #install.packages(&quot;irr&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBscFNvbHZlXG5cbkF0dGFjaGluZyBwYWNrYWdlOiDigJhpcnLigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTpwZXJmb3JtYW5jZeKAmTpcblxuICAgIGljY1xuIn0= -->
-<pre><code>Loading required package: lpSolve
-
-Attaching package: ‘irr’
-
-The following object is masked from ‘package:performance’:
-
-    icc</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShIbWlzYykgI2luc3RhbGwucGFja2FnZXMoXCJIbWlzY1wiKVxuYGBgIn0= -->
-<pre class="r"><code>library(Hmisc) #install.packages(&quot;Hmisc&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBsYXR0aWNlXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IHN1cnZpdmFsXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IEZvcm11bGFcblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmEhtaXNj4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0cyBhcmUgbWFza2VkIGZyb20g4oCYcGFja2FnZTpkcGx5cuKAmTpcblxuICAgIHNyYywgc3VtbWFyaXplXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0cyBhcmUgbWFza2VkIGZyb20g4oCYcGFja2FnZTpiYXNl4oCZOlxuXG4gICAgZm9ybWF0LnB2YWwsIHVuaXRzXG4ifQ== -->
-<pre><code>Loading required package: lattice
-Loading required package: survival
-Loading required package: Formula
-
-Attaching package: ‘Hmisc’
-
-The following objects are masked from ‘package:dplyr’:
-
-    src, summarize
-
-The following objects are masked from ‘package:base’:
-
-    format.pval, units</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShnZ3B1YnIpICNpbnN0YWxsLnBhY2thZ2VzKFwiZ2dwdWJyXCIpXG5saWJyYXJ5KGV4dHJhZm9udCkgIyBpbnN0YWxsLnBhY2thZ2VzKFwiZXh0cmFmb250XCIpXG5gYGAifQ== -->
-<pre class="r"><code>library(ggpubr) #install.packages(&quot;ggpubr&quot;)
-library(extrafont) # install.packages(&quot;extrafont&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJpbmcgZm9udHMgd2l0aCBSXG4ifQ== -->
-<pre><code>Registering fonts with R</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShndCkgI2luc3RhbGwucGFja2FnZXMoXCJndFwiKVxuYGBgIn0= -->
-<pre class="r"><code>library(gt) #install.packages(&quot;gt&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoicGFja2FnZSDigJhndOKAmSB3YXMgYnVpbHQgdW5kZXIgUiB2ZXJzaW9uIDQuMS4yXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYZ3TigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTpIbWlzY+KAmTpcblxuICAgIGh0bWxcbiJ9 -->
-<pre><code>package ‘gt’ was built under R version 4.1.2
-Attaching package: ‘gt’
-
-The following object is masked from ‘package:Hmisc’:
-
-    html</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShzalBsb3QpICNpbnN0YWxsLnBhY2thZ2VzKFwic2pQbG90XCIpXG5cbmBgYCJ9 -->
-<pre class="r"><code>library(sjPlot) #install.packages(&quot;sjPlot&quot;)
+library(irr) #install.packages(&quot;irr&quot;)
+library(Hmisc) #install.packages(&quot;Hmisc&quot;)
+library(ggpubr) #install.packages(&quot;ggpubr&quot;)
+library(extrafont) # install.packages(&quot;extrafont&quot;)
+library(gt) #install.packages(&quot;gt&quot;)
+library(sjPlot) #install.packages(&quot;sjPlot&quot;)
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
