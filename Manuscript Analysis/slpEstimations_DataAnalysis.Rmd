@@ -26,27 +26,30 @@ library(sjPlot) #install.packages("sjPlot")
 
 # Importing the datasets
 
-This chunk contains all of the dataframes needed for the stat analysis.
+This chunk contains all of the dataframes needed for the statistical analysis.
 
 ```{r}
-# This data is used for question #1
-IntSpeakerRatings <- rio::import("Shared Data/SpeakerIntelligibility.csv")
 
-# This data is used for question #2 & #4
+# This data is used for question #1 & 2
 slp_Demographics <- rio::import("Shared Data/SLP_Demographics.csv")
 slp_Correlation <- rio::import("Shared Data/SLP_Correlation.csv")
 
 # This data is used for question #3
+IntSpeakerRatings <- rio::import("Shared Data/SpeakerIntelligibility.csv")
+
+# Naïve Listener Data
 naive_Demographics <- rio::import("Shared Data/NaiveListener_Demographics.csv")
 naive_Correlation <- rio::import("Shared Data/NaiveListener_Correlation.csv")
 
 ```
 
-# Descriptive Stats
+# Descriptive Statistics
 
 ## SLP Demographics
 
 ```{r}
+ 
+#creating separate data frames for SLP gender, race, and ethnicity demographic information
 
 slp_gender <- slp_Demographics %>%
   dplyr::select(gender) %>%
@@ -71,12 +74,20 @@ slp_ethnicity <- slp_Demographics %>%
   dplyr::rename(Category = "ethnicity") %>%
   dplyr::mutate(Group = "Ethnicity")
 
+#merging these separate data frames together
+
 slp_demo1 <- dplyr::full_join(slp_gender, slp_race)
 
 slp_demo1 <- dplyr::full_join(slp_demo1, slp_ethnicity)
-  
+
+#creating the SLP demographic tables 
+
+## Race, gender, and ethicity information
+
 slp_demo_table <- slp_demo1 %>%
   gt::gt(rowname_col = "Category", groupname_col = "Group")
+
+## SLP Age and Years experience information
 
 slp_demo2 <- slp_Demographics %>%
   dplyr::select(c(age, yearsExp)) %>%
@@ -87,6 +98,8 @@ slp_demo2 <- slp_Demographics %>%
   gt::gt() %>%
   gt::fmt_number(columns = c(Mean, SD), decimals = 2)
 
+# removing extra items from the environment that are no longer needed
+
 rm(slp_gender, slp_race, slp_ethnicity, slp_demo1)
 
 ```
@@ -95,8 +108,7 @@ rm(slp_gender, slp_race, slp_ethnicity, slp_demo1)
 
 ```{r}
 
-naive_Demographics %>%
-  furniture::table1(age, gender, race, ethnicity, famSLHDs)
+#creating separate data frames for naive listener gender, race, ethnicity, and familiarity with speech language and hearing disorders (famSLHDs) information
 
 naive_gender <- naive_Demographics %>%
   dplyr::select(gender) %>%
@@ -128,17 +140,25 @@ naive_famSLHDs <- naive_Demographics %>%
   dplyr::rename(Category = "famSLHDs") %>%
   dplyr::mutate(Group = "Familiar with Comm Disorders")
 
+# Merging these separate data frames together
+
 naive_demo1 <- dplyr::full_join(naive_gender, naive_race)
 
 naive_demo2 <- dplyr::full_join(naive_demo1, naive_ethnicity)
 
 naive_demo3 <- dplyr::full_join(naive_demo2, naive_famSLHDs)
 
+#creating demographic table
+
 naive_demo_table <- naive_demo3 %>%
   gt::gt(rowname_col = "Category", groupname_col = "Group")
 
+#calculating demographic age information
+
 naive_age <- naive_Demographics %>%
   dplyr::summarize(Age_mean = mean(age), Age_sd = sd(age), Age_min = min(age), Age_max = max(age))
+
+# removing extra items from the environment that are no longer needed
 
 rm(naive_gender, naive_race, naive_ethnicity, naive_famSLHDs, slp_demo1, naive_demo2, naive_demo3)
 
@@ -148,7 +168,8 @@ rm(naive_gender, naive_race, naive_ethnicity, naive_famSLHDs, slp_demo1, naive_d
 
 ```{r}
 
-# Print mean and SD
+# Two data frames to calculate descriptive statistics for SLP and naive listener intelligibility measures per speaker
+## Note: The InSpeakerRatings data frame already has the mean intelligibility measure values for all speakers (SLP VAS, estimations, and naive OT). However, standard deviation and range is not included. So it was recalculated here. 
 
 SLP_data <- slp_Correlation %>%
   dplyr::select(!c(slp_VAS.Rel, slp_EST.Rel)) %>%
@@ -165,9 +186,13 @@ naive_data <- naive_Correlation %>%
   dplyr::mutate(Method = "Naïve OT") %>%
   dplyr::rename(Speaker = "SpeakerID")
 
+# Merging the two data frames
+
 Descriptives_table <- full_join(SLP_data, naive_data)
 
+# removing extra items from the environment
 
+rm(SLP_data, naive_data)
 
 ```
 
@@ -176,6 +201,7 @@ Descriptives_table <- full_join(SLP_data, naive_data)
 
 ```{r}
 
+# Creating long-form data frame for descriptives plot
 
 intRatings_Long1 <- slp_Correlation %>%
   dplyr::rename(SpeakerID = Speaker) %>%
@@ -201,16 +227,19 @@ plot_data <- base::rbind(intRatings_Long1, intRatings_Long2) %>%
                                                 "slp_VAS" = "SLP (VAS)",
                                                 "slp_EST" = "SLP (Estimations)"))
 
-# custom colors
+# custom colors (used for all plots in this script)
+
 my_pal <- c("#086375", "#B147C2", "#3C1642", "#0FB1D2")
 
-# Difference Plots: Word Trans ----                                                       
+# Difference Plots 
+
 plot_data %>%
   ggplot() +
        aes(x = RatingType,
            y = Ratings,
            color = RatingType,
-           fill = RatingType) + 
+           fill = RatingType) +
+  ## adding distribution plots 
   ggdist::stat_halfeye(
     adjust = 1.3, 
     width = .6, 
@@ -220,6 +249,7 @@ plot_data %>%
     outline_bars = T
   ) + 
   scale_alpha_discrete(range = c(.4,.9), guide = "none") +
+  ## Adding boxplot under distributions
   geom_boxplot(
     width = .15, 
     outlier.shape = NA,
@@ -245,221 +275,20 @@ plot_data %>%
   theme(text=element_text(size = 13, 
         family="Arial Bold"))
 
+# Saving Distribution plot
+
 ggsave("Plots/Distribution_plot.png", plot = last_plot(),height = 5, width = 7, units = "in", scale = .8)
+
+# removing extra items from the environment
+
+rm(intRatings_Long1, intRatings_Long2)
 
 ```
 
 
 # Research Question #1
 
-Q1: Are SLP estimates of speech intelligibility predictive of naive listener estimations?
-
-Since the speakers are the common variable between the SLP and Naive listener task, intelligibility scores for each method were calculated by speaker.
-
-## Correlation Matrix
-
-This first block explores the correlation matrix of SLP and Naive listener intelligibility ratings. 
-
-```{r}
-
-CorrMatrix <- IntSpeakerRatings %>%
-  dplyr::select(!SpeakerID) %>%
-  as.matrix() %>%
-  Hmisc::rcorr() 
-
-CorrMatrixP <- CorrMatrix$P < .05
-
-CorrMatrix <- CorrMatrix$r
-
-CorrMatrix <- CorrMatrix %>%
-  as.data.frame() %>%
-  dplyr::mutate(naive_VAS = as.numeric(naive_VAS),
-                naive_OT = as.numeric(naive_OT),
-                slp_EST = as.numeric(slp_EST),
-                slp_VAS = as.numeric(slp_VAS)) %>%
-  gt::gt() %>%
-  gt::fmt_number(columns = c(naive_VAS, naive_OT, slp_EST, slp_VAS), decimals = 2) %>%
-  gt::gtsave("Tables/CorrMatrix.html")
-
-```
-
-## Modeling naive OT scores 
-
-This next block is modeling SLP estimation as predictor of naive listener OT.
-
-```{r}
-
-SLP_ESTmodel <- lm(naive_OT ~ slp_EST, data= IntSpeakerRatings)
-summary(SLP_ESTmodel)
-performance::check_model(SLP_ESTmodel)
-sjPlot::tab_model(SLP_ESTmodel, file = "Tables/Estimation_model.html")
-
-
-```
-
-
-This next block is examining SLP VAS as a predictor of naive listener OT.
-
-```{r}
-
-SLP_VASmodel <- lm(naive_OT ~ slp_VAS, data = IntSpeakerRatings)
-summary(SLP_VASmodel)
-performance::check_model(SLP_VASmodel)
-sjPlot::tab_model(SLP_VASmodel, file = "Tables/VAS_model.html")
-
-```
-
-
-Naive OT Model comparisons
-
-```{r}
-performance::compare_performance(SLP_ESTmodel, SLP_VASmodel, rank = T)
-
-performance::test_performance(SLP_ESTmodel, SLP_VASmodel)
-```
-
-
-## Additional Analysis: Modeling naive VAS scores
-
-This next block is examining SLP EST as a predictor of naive listener VAS.
-
-```{r}
-SLP_ESTmodel_VAS <- lm(naive_VAS ~ slp_EST, data = IntSpeakerRatings)
-summary(SLP_ESTmodel_VAS)
-performance::check_model(SLP_ESTmodel_VAS)
-```
-
-This block examines SLP VAS as a predictor of naive listener VAS.
-
-```{r}
-SLP_VASmodel_VAS <- lm(naive_VAS ~ slp_VAS, data = IntSpeakerRatings)
-summary(SLP_VASmodel_VAS)
-performance::check_model(SLP_VASmodel_VAS)
-```
-
-Naive VAS model comparison
-
-```{r}
-performance::compare_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS, rank = T)
-
-performance::test_performance(SLP_ESTmodel_VAS, SLP_VASmodel_VAS)
-```
-
-## RQ1 Plot
-
-```{r}
-
-IntSpeakerRatings_Long <- IntSpeakerRatings %>%
-  tidyr::pivot_longer(cols = slp_EST:slp_VAS, names_to = "Method",values_to = "rating") %>%
-  dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS"))
-
-IntSpeakerRatings_Long %>%
-  ggplot() +
-  aes(x = rating, 
-      y = naive_OT,
-      color = Method,
-      shape = Method,
-      ymin = 0,
-      ymax = 100,
-      xmin = 0,
-      xmax = 100) +
-  geom_point() +
-  geom_smooth(method = "lm",
-              se = F) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  ylab("Naïve Listener Intelligibilty (Transcription)") +
-  labs(color = "SLP Rating Method", shape = "SLP Rating Method") +
-  scale_color_manual(values = my_pal) +
-  scale_shape_manual(values = c(1, 16)) +
-  coord_equal() +
-  theme_classic() +
-  theme(legend.position = "bottom",
-        axis.title.x=element_blank())
-
-ggsave("Plots/RQ1_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
-
-```
-
-
-# Research Question #2
-
-## Correlation Analysis
-Q2: Is there a strong relationship between SLP intelligibility percent estimates with SLP VAS intelligibility ratings?
-
-```{r}
-
-rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
-
-```
-
-## Scatterplot
-
-```{r}
-
-slp_Correlation %>%
-  ggplot() +
-  aes(x = slp_VAS,
-      y = slp_EST) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_line(method = "lm", stat ="smooth", color = my_pal[2], aes(group = slpID), alpha = .4) +
-  geom_smooth(method = "lm", se = F, color = my_pal[2]) +
-  xlab("SLP VAS Rating") +
-  ylab("SLP Percent Estimates") +
-  coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
-  theme_classic() +
-  theme(aspect.ratio = 1) 
-
-ggsave("Plots/RQ2_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
-
-```
-
-
-
-# Research Question #3
-
-## Repeated Measures Correlation
-
-Q3: Is there a strong relationship between naive listener OT scores with their VAS intelligibility estimation?
-
-```{r}
-
-rmcorr::rmcorr(ListenerID, naive_OT, naive_VAS, naive_Correlation)
-
-```
-
-## Scatterplot
-
-```{r}
-
-naive_Correlation %>%
-  ggplot() + 
-  aes(x = naive_VAS,
-      y = naive_OT) +
-  geom_point(color = my_pal[4], alpha = .7, shape = 1) +
-  geom_point(data = naive_Correlation %>%
-               dplyr::group_by(ListenerID) %>%
-               dplyr::summarize(naive_VAS = mean(naive_VAS),
-                                naive_OT = mean(naive_OT)), 
-             color = my_pal[4], size = 2) +
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  geom_line(data = naive_Correlation %>%
-               dplyr::group_by(ListenerID) %>%
-               dplyr::summarize(naive_VAS = mean(naive_VAS),
-                                naive_OT = mean(naive_OT)),
-            method = "lm", stat = "smooth", se = F, color = my_pal[4]) +
-  xlab("VAS Ratings") +
-  ylab("Orthographic Transcription") +
-  coord_cartesian(xlim = c(0,100), ylim = c(0, 100)) +
-  theme_classic() +
-  theme(aspect.ratio = 1)
-
-ggsave("Plots/RQ3_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
-
-```
-
-
-# Research Question #4
-Q4: How reliable are these intelligibility measures (VAS ratings, approximations, and OT scores), as determined by intrarater and interrater agreement?
+Q1: How reliable are these intelligibility measures (VAS ratings, approximations, and OT scores), as determined by intrarater and interrater agreement?
 
 ## Intrarater Reliability
 
@@ -506,6 +335,11 @@ irr::icc(slpVAS_Inter_wide, model = "twoway",
 irr::icc(slpVAS_Inter_wide, model = "twoway",
   type="agreement",
   unit="single", r0=0, conf.level=0.95)
+
+# removing extra items from the environment
+
+rm(slpVAS_Inter)
+
 ```
 
 ### SLPs Estimations
@@ -527,6 +361,223 @@ irr::icc(slpEST_Inter_wide, model = "twoway",
 irr::icc(slpEST_Inter_wide, model = "twoway",
   type="agreement",
   unit="single", r0=0, conf.level=0.95)
+
+# removing extra items from the environment
+
+rm(slpEST_Inter)
+
+```
+
+# Research Question #2
+
+## Repeated Measures Correlation Analysis
+
+Q2: Is there a strong relationship between SLP intelligibility percent estimates with SLP VAS intelligibility ratings?
+
+```{r}
+
+rmcorr::rmcorr(slpID, slp_VAS, slp_EST, slp_Correlation)
+
+```
+
+## Scatterplot
+
+```{r}
+
+slp_Correlation %>%
+  ggplot() +
+  aes(x = slp_VAS,
+      y = slp_EST) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_line(method = "lm", stat ="smooth", color = my_pal[2], aes(group = slpID), alpha = .4) +
+  geom_smooth(method = "lm", se = F, color = my_pal[2]) +
+  xlab("SLP VAS Rating") +
+  ylab("SLP Percent Estimates") +
+  coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
+  theme_classic() +
+  theme(aspect.ratio = 1) 
+
+ggsave("Plots/RQ2_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
+
+```
+
+
+# Research Question #3
+
+Q1: Are SLP estimates of speech intelligibility predictive of naive listener estimations?
+
+Since the speakers are the common variable between the SLP and Naive listener task, the mean SLP VAS rating, SLP estimation, and naive listener OT scores were calculated for each of the 20 speakers.
+
+## Correlation Matrix
+
+This first block explores the correlation matrix of SLP and Naive listener intelligibility ratings. 
+
+```{r}
+
+# Creating a correlation Matrix
+
+CorrMatrix <- IntSpeakerRatings %>%
+  dplyr::select(!SpeakerID) %>%
+  as.matrix() %>%
+  Hmisc::rcorr() 
+
+# Testing to see if all coefficients are significant at the .05 level
+
+CorrMatrixP <- CorrMatrix$P < .05
+
+CorrMatrix <- CorrMatrix$r
+
+# Creating a correlation matrix table to export and save
+
+CorrMatrix <- CorrMatrix %>%
+  as.data.frame() %>%
+  dplyr::mutate(naive_VAS = as.numeric(naive_VAS),
+                naive_OT = as.numeric(naive_OT),
+                slp_EST = as.numeric(slp_EST),
+                slp_VAS = as.numeric(slp_VAS)) %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(naive_VAS, naive_OT, slp_EST, slp_VAS), decimals = 2) %>%
+  gt::gtsave("Tables/CorrMatrix.html")
+
+```
+
+## Modeling naive OT scores 
+
+### Modeling SLP estimation as predictor of naive listener OT.
+
+```{r}
+
+SLP_ESTmodel <- lm(naive_OT ~ slp_EST, data= IntSpeakerRatings)
+summary(SLP_ESTmodel)
+performance::check_model(SLP_ESTmodel)
+sjPlot::tab_model(SLP_ESTmodel, file = "Tables/Estimation_model.html")
+
+
+```
+
+
+### Modeling SLP VAS as a predictor of naive listener OT.
+
+```{r}
+
+SLP_VASmodel <- lm(naive_OT ~ slp_VAS, data = IntSpeakerRatings)
+summary(SLP_VASmodel)
+performance::check_model(SLP_VASmodel)
+sjPlot::tab_model(SLP_VASmodel, file = "Tables/VAS_model.html")
+
+```
+
+
+## RQ3 Plot
+
+```{r}
+
+# creating long form data frame for plot
+
+IntSpeakerRatings_Long <- IntSpeakerRatings %>%
+  tidyr::pivot_longer(cols = slp_EST:slp_VAS, names_to = "Method",values_to = "rating") %>%
+  dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS")) %>%
+  dplyr::mutate(Method = as.factor(Method)) %>%
+  dplyr::mutate(Method = fct_relevel(Method, "VAS", "Estimation"))
+
+# Creating RQ3 plot
+
+IntSpeakerRatings_Long %>%
+  ggplot() +
+  aes(x = rating, 
+      y = naive_OT,
+      color = Method,
+      shape = Method) +
+  #adding data pairs and fitted regression line
+  geom_point() +
+  geom_smooth(method = "lm",
+              se = F) +
+  #adding reference line to indicate theoretical perfict fit
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  ylab("Naïve Listener Intelligibilty (OT Score)") +
+  labs(color = "SLP Intelligibility Measure", shape = "SLP Intelligibility Measure") +
+  scale_color_manual(values = my_pal[2:3]) +
+  scale_shape_manual(values = c(1, 16)) +
+  #equalize the x and y axes
+  coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
+  theme_classic() +
+  theme(legend.position = "bottom",
+        axis.title.x=element_blank(), 
+        aspect.ratio = 1)
+
+#Saving the scatterplot
+ggsave("Plots/RQ3_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
+
+```
+
+
+# Additional Analysis
+
+## Relationship between Naïve OT scores and Naïve VAS Ratings of Intelligibility
+
+### Repeated Measures Correlation
+
+To test whether our results are consistent with previous research, we investigated the relationship between naïve OT scores and VAS ratings of intelligibility.
+
+```{r}
+
+rmcorr::rmcorr(ListenerID, naive_OT, naive_VAS, naive_Correlation)
+
+```
+
+### Scatterplot
+
+To depict relationship between the two naïve listener intelligibility measures
+
+```{r}
+
+naive_Correlation %>%
+  ggplot() + 
+  aes(x = naive_VAS,
+      y = naive_OT) +
+  #Plotting all the raw VAS ratings and OT scores for every listener. 
+  #Listeners transcribed and rated 2 out of the 20 speakers, so every listener has 2 pairs of OT/VAS data.
+  geom_point(color = my_pal[4], alpha = .7, shape = 1) +
+  #Plotting the average OT score and VAS rating per Listener (i.e. the listener's mean OT score with the listener's mean VAS rating)
+  geom_point(data = naive_Correlation %>%
+               dplyr::group_by(ListenerID) %>%
+               dplyr::summarize(naive_VAS = mean(naive_VAS),
+                                naive_OT = mean(naive_OT)), 
+             color = my_pal[4], size = 2) +
+  #Adding the reference line that indicates a theoretically perfect fit. Visualizes if VAS is under- or over-estimating OT scores.
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_line(data = naive_Correlation %>%
+               dplyr::group_by(ListenerID) %>%
+               dplyr::summarize(naive_VAS = mean(naive_VAS),
+                                naive_OT = mean(naive_OT)),
+            method = "lm", stat = "smooth", se = F, color = my_pal[4]) +
+  xlab("VAS Ratings") +
+  ylab("Orthographic Transcription") +
+  coord_cartesian(xlim = c(0,100), ylim = c(0, 100)) +
+  theme_classic() +
+  theme(aspect.ratio = 1)
+
+```
+
+## Modeling Naïve Listener VAS scores
+
+### Examining SLP EST as a predictor of naive listener VAS.
+
+```{r}
+
+SLP_ESTmodel_VAS <- lm(naive_VAS ~ slp_EST, data = IntSpeakerRatings)
+summary(SLP_ESTmodel_VAS)
+performance::check_model(SLP_ESTmodel_VAS)
+
+```
+
+### Examining SLP VAS as a predictor of naive listener VAS.
+
+```{r}
+
+SLP_VASmodel_VAS <- lm(naive_VAS ~ slp_VAS, data = IntSpeakerRatings)
+summary(SLP_VASmodel_VAS)
+performance::check_model(SLP_VASmodel_VAS)
 
 ```
 
