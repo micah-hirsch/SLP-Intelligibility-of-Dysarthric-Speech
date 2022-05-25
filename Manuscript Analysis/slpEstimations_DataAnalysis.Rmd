@@ -80,23 +80,35 @@ slp_demo1 <- dplyr::full_join(slp_gender, slp_race)
 
 slp_demo1 <- dplyr::full_join(slp_demo1, slp_ethnicity)
 
-#creating the SLP demographic tables 
+#creating the SLP demographic tables
 
 ## Race, gender, and ethicity information
 
-slp_demo_table <- slp_demo1 %>%
+slp_demo_table1 <- slp_demo1 %>%
   gt::gt(rowname_col = "Category", groupname_col = "Group")
+
+slp_demo_table1
+
+## saving table to folder
+
+slp_demo_table1 %>% gt::gtsave("Tables/SLP_demo1.html")
 
 ## SLP Age and Years experience information
 
-slp_demo2 <- slp_Demographics %>%
+slp_demo_table2 <- slp_Demographics %>%
   dplyr::select(c(age, yearsExp)) %>%
   tidyr::pivot_longer(cols = c(age, yearsExp), names_to = "Variable", values_to = "Value") %>%
   dplyr::mutate(Variable = recode(Variable, age = "Age", yearsExp = "Years Experience")) %>%
   dplyr::group_by(Variable) %>%
   dplyr::summarize(Mean = mean(Value), SD = sd(Value), Min = min(Value), Max = max(Value)) %>%
   gt::gt() %>%
-  gt::fmt_number(columns = c(Mean, SD), decimals = 2)
+  gt::fmt_number(columns = c(Mean, SD), decimals = 2) 
+
+slp_demo_table2
+
+## saving table to folder
+
+slp_demo_table2 %>% gt::gtsave("Tables/SLP_demo2.html")
 
 # removing extra items from the environment that are no longer needed
 
@@ -148,51 +160,77 @@ naive_demo2 <- dplyr::full_join(naive_demo1, naive_ethnicity)
 
 naive_demo3 <- dplyr::full_join(naive_demo2, naive_famSLHDs)
 
-#creating demographic table
+#creating demographic table 
 
 naive_demo_table <- naive_demo3 %>%
-  gt::gt(rowname_col = "Category", groupname_col = "Group")
+  gt::gt(rowname_col = "Category", groupname_col = "Group") 
 
-#calculating demographic age information
+#saving table to folder
 
-naive_age <- naive_Demographics %>%
+naive_demo_table %>% gt::gtsave("Tables/Naive_demo.html")
+
+#calculating demographic age information for naive listeners (not saved to tables folder, but reported in manuscript)
+
+naive_Demographics %>%
   dplyr::summarize(Age_mean = mean(age), Age_sd = sd(age), Age_min = min(age), Age_max = max(age))
 
 # removing extra items from the environment that are no longer needed
 
-rm(naive_gender, naive_race, naive_ethnicity, naive_famSLHDs, slp_demo1, naive_demo2, naive_demo3)
+rm(naive_gender, naive_race, naive_ethnicity, naive_famSLHDs, naive_demo1, naive_demo2, naive_demo3)
 
 ```
 
-## SLP and Naive Listener Descriptive Measures by Speaker (including SD here)
+## SLP and Naive Listener Descriptive Measures across Speakers 
+
 
 ```{r}
 
-# Two data frames to calculate descriptive statistics for SLP and naive listener intelligibility measures per speaker
-## Note: The InSpeakerRatings data frame already has the mean intelligibility measure values for all speakers (SLP VAS, estimations, and naive OT). However, standard deviation and range is not included. So it was recalculated here. 
+#creating descriptives data frame
 
-SLP_data <- slp_Correlation %>%
-  dplyr::select(!c(slp_VAS.Rel, slp_EST.Rel)) %>%
-  tidyr::pivot_longer(cols = slp_VAS:slp_EST, names_to = "Method", values_to = "Int") %>%
-  dplyr::mutate(Method = ifelse(Method == "slp_EST", "SLP Estimation", "SLP VAS Rating")) %>%
-  dplyr::group_by(Speaker, Method) %>%
-  dplyr::summarize(Mean = mean(Int, na.rm = T), SD = sd(Int, na.rm = T),
-                   Min = min(Int, na.rm =T ), Max = max(Int, na.rm = T))
-
-naive_data <- naive_Correlation %>%
+IntSpeakerRatings1 <- IntSpeakerRatings %>%
   dplyr::select(!naive_VAS) %>%
-  dplyr::group_by(SpeakerID) %>%
-  dplyr::summarize(Mean = mean(naive_OT), SD = sd(naive_OT), Min = min(naive_OT), Max = max(naive_OT)) %>%
-  dplyr::mutate(Method = "Naïve OT") %>%
-  dplyr::rename(Speaker = "SpeakerID")
+  dplyr::mutate(Etiology = case_when(
+    grepl("ALS", SpeakerID, fixed = T) ~ "ALS",
+    grepl("PD", SpeakerID, fixed = T) ~ "PD",
+    grepl("HD", SpeakerID, fixed = T) ~ "HD",
+    TRUE ~ "Ataxia"))
 
-# Merging the two data frames
+IntSpeakerRatings2 <- IntSpeakerRatings1 %>%
+  dplyr::mutate(Etiology = "All Speakers")
 
-Descriptives_table <- full_join(SLP_data, naive_data)
+Descritptive_table <- dplyr::full_join(IntSpeakerRatings1, IntSpeakerRatings2)
+
+# Calculating M and SD and Creating Descriptive table 
+
+Descritptive_table <- Descritptive_table %>%
+  dplyr::mutate(Etiology = as.factor(Etiology),
+                Etiology = factor(Etiology, c("All Speakers", "Ataxia", "ALS", "PD", "HD"))) %>%
+  dplyr::group_by(Etiology) %>%
+  dplyr::summarize(m_naiveOT = mean(naive_OT), sd_naiveOT = sd(naive_OT),
+                   m_slpVAS = mean(slp_VAS), sd_slpVAS = sd(slp_VAS),
+                   m_slpEST = mean(slp_EST), sd_slpEST = sd(slp_EST)) %>%
+  gt::gt() %>%
+  gt::tab_spanner(label = "Naïve Listener OT Score",
+                  columns = c(m_naiveOT, sd_naiveOT)) %>%
+  gt::tab_spanner(label = "SLP VAS Rating",
+                  columns = c(m_slpVAS, sd_slpVAS)) %>%
+  gt::tab_spanner(label = "SLP Intelligibility Estimation",
+                  columns = c(m_slpEST, sd_slpEST)) %>%
+  gt::fmt_number(m_naiveOT:sd_slpEST, decimals = 2) %>%
+  gt::cols_label(m_naiveOT = "M",
+                 sd_naiveOT = "SD",
+                 m_slpVAS = "M",
+                 sd_slpVAS = "SD",
+                 m_slpEST = "M",
+                 sd_slpEST = "SD")
+  
+# saving to table folder
+
+Descritptive_table %>% gt::gtsave("Tables/Int_Descriptive_Table.html")
 
 # removing extra items from the environment
 
-rm(SLP_data, naive_data)
+rm(IntSpeakerRatings1, IntSpeakerRatings2)
 
 ```
 
