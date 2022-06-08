@@ -3,7 +3,7 @@ title: "SLP Estimations: Data Analysis"
 output: html_notebook
 ---
 
-This is the analysis script for the manuscript entitled "The reliability and validity of SLPs' esitmations of speech intelligibility in dysarthria". Much of the analysis and code is the same from the 2021 ASHA Convention poster presentation. However, some of the data visualizations and tables have changed.
+This is the analysis script for the manuscript entitled "The reliability and validity of SLPs' estimations of speech intelligibility in dysarthria". Much of the analysis and code is the same from the 2021 ASHA Convention poster presentation. However, some of the data visualizations and tables have changed.
 
 # Packages
 
@@ -255,13 +255,9 @@ intRatings_Long2 <- naive_Correlation %>%
 plot_data <- base::rbind(intRatings_Long1, intRatings_Long2) %>%
   dplyr::mutate(RatingType = as.factor(RatingType)) %>%
   dplyr::mutate(RatingType = recode_factor(RatingType,
-                                           "naive_OT" = "Naive (Transcriptions)",
-                                           "slp_VAS" = "SLP (VAS)",
-                                           "slp_EST" = "SLP (Estimations)")) %>%
-  dplyr::mutate(RatingType = fct_relevel(RatingType,
-                                                "Naive (Transcriptions)",
-                                                "slp_VAS" = "SLP (VAS)",
-                                                "slp_EST" = "SLP (Estimations)"))
+                                           "naive_OT" = "Naïve Listener Orthographic Transcriptions",
+                                           "slp_VAS" = "SLP VAS Ratings",
+                                           "slp_EST" = "SLP Percent Estimations")) 
 
 # custom colors (used for all plots in this script)
 
@@ -307,9 +303,7 @@ plot_data %>%
   ylab("Intelligibility") +
   xlab("") +
   theme_classic() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(text=element_text(size = 13, 
-        family="Arial Bold"))
+  theme(plot.title = element_text(hjust = 0.5)) 
 
 # Saving Distribution plot
 
@@ -428,7 +422,7 @@ slp_Correlation %>%
   geom_line(method = "lm", stat ="smooth", color = my_pal[2], aes(group = slpID), alpha = .4) +
   geom_smooth(method = "lm", se = F, color = my_pal[2]) +
   xlab("SLP VAS Rating") +
-  ylab("SLP Percent Estimates") +
+  ylab("SLP Percent Estimation") +
   coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
   theme_classic() +
   theme(aspect.ratio = 1) 
@@ -453,7 +447,7 @@ This first block explores the correlation matrix of SLP and Naive listener intel
 # Creating a correlation Matrix
 
 CorrMatrix <- IntSpeakerRatings %>%
-  dplyr::select(!SpeakerID) %>%
+  dplyr::select(!c(SpeakerID, naive_VAS)) %>%
   as.matrix() %>%
   Hmisc::rcorr() 
 
@@ -467,12 +461,13 @@ CorrMatrix <- CorrMatrix$r
 
 CorrMatrix <- CorrMatrix %>%
   as.data.frame() %>%
-  dplyr::mutate(naive_VAS = as.numeric(naive_VAS),
-                naive_OT = as.numeric(naive_OT),
+  dplyr::mutate(naive_OT = as.numeric(naive_OT),
                 slp_EST = as.numeric(slp_EST),
                 slp_VAS = as.numeric(slp_VAS)) %>%
   gt::gt() %>%
-  gt::fmt_number(columns = c(naive_VAS, naive_OT, slp_EST, slp_VAS), decimals = 2) %>%
+  gt::fmt_number(columns = c(naive_OT, slp_EST, slp_VAS), decimals = 2) 
+
+CorrMatrix %>%
   gt::gtsave("Tables/CorrMatrix.html")
 
 ```
@@ -512,9 +507,9 @@ sjPlot::tab_model(SLP_VASmodel, file = "Tables/VAS_model.html")
 
 IntSpeakerRatings_Long <- IntSpeakerRatings %>%
   tidyr::pivot_longer(cols = slp_EST:slp_VAS, names_to = "Method",values_to = "rating") %>%
-  dplyr::mutate(Method = recode(Method, slp_EST = "Estimation", slp_VAS = "VAS")) %>%
+  dplyr::mutate(Method = recode(Method, slp_EST = "Percent Estimation", slp_VAS = "VAS Rating")) %>%
   dplyr::mutate(Method = as.factor(Method)) %>%
-  dplyr::mutate(Method = fct_relevel(Method, "VAS", "Estimation"))
+  dplyr::mutate(Method = fct_relevel(Method, "VAS Rating", "Percent Estimation"))
 
 # Creating RQ3 plot
 
@@ -530,8 +525,8 @@ IntSpeakerRatings_Long %>%
               se = F) +
   #adding reference line to indicate theoretical perfict fit
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  ylab("Naïve Listener Intelligibilty (OT Score)") +
-  labs(color = "SLP Intelligibility Measure", shape = "SLP Intelligibility Measure") +
+  ylab("Naïve Listener Orthographic Transcription Scores") +
+  labs(color = "SLP Intelligibility Measures", shape = "SLP Intelligibility Measures") +
   scale_color_manual(values = my_pal[2:3]) +
   scale_shape_manual(values = c(1, 16)) +
   #equalize the x and y axes
