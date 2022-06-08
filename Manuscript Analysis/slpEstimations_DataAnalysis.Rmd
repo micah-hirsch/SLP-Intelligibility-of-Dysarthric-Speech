@@ -525,7 +525,7 @@ IntSpeakerRatings_Long %>%
               se = F) +
   #adding reference line to indicate theoretical perfict fit
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  ylab("Naïve Listener Orthographic Transcription Scores") +
+  ylab("Naïve Listener OT Scores") +
   labs(color = "SLP Intelligibility Measures", shape = "SLP Intelligibility Measures") +
   scale_color_manual(values = my_pal[2:3]) +
   scale_shape_manual(values = c(1, 16)) +
@@ -537,7 +537,7 @@ IntSpeakerRatings_Long %>%
         aspect.ratio = 1)
 
 #Saving the scatterplot
-ggsave("Plots/RQ3_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = .8)
+ggsave("Plots/RQ3_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in")
 
 ```
 
