@@ -255,9 +255,9 @@ intRatings_Long2 <- naive_Correlation %>%
 plot_data <- base::rbind(intRatings_Long1, intRatings_Long2) %>%
   dplyr::mutate(RatingType = as.factor(RatingType)) %>%
   dplyr::mutate(RatingType = recode_factor(RatingType,
-                                           "naive_OT" = "Naïve Listener Orthographic Transcriptions",
-                                           "slp_VAS" = "SLP VAS Ratings",
-                                           "slp_EST" = "SLP Percent Estimations")) 
+                                           "naive_OT" = "Naïve Listeners'\nOrthographic Transcriptions",
+                                           "slp_VAS" = "SLPs'\nVAS Ratings",
+                                           "slp_EST" = "SLPs'\nPercent Estimations")) 
 
 # custom colors (used for all plots in this script)
 
@@ -421,8 +421,8 @@ slp_Correlation %>%
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
   geom_line(method = "lm", stat ="smooth", color = my_pal[2], aes(group = slpID), alpha = .4) +
   geom_smooth(method = "lm", se = F, color = my_pal[2]) +
-  xlab("SLP VAS Rating") +
-  ylab("SLP Percent Estimation") +
+  xlab("SLPs' VAS Ratings") +
+  ylab("SLPs' Percent Estimations") +
   coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
   theme_classic() +
   theme(aspect.ratio = 1) 
@@ -509,9 +509,17 @@ IntSpeakerRatings_Long <- IntSpeakerRatings %>%
   tidyr::pivot_longer(cols = slp_EST:slp_VAS, names_to = "Method",values_to = "rating") %>%
   dplyr::mutate(Method = recode(Method, slp_EST = "Percent Estimation", slp_VAS = "VAS Rating")) %>%
   dplyr::mutate(Method = as.factor(Method)) %>%
-  dplyr::mutate(Method = fct_relevel(Method, "VAS Rating", "Percent Estimation"))
+  dplyr::mutate(Method = fct_relevel(Method, "VAS Ratings", "Percent Estimations"))
 
 # Creating RQ3 plot
+arrows <- tibble(
+  x1 = c(16.11100 - 10,40.47600 - 10),
+  x2 = c(16.11100 - 2,40.47600 - 2),
+  y1 = c(41.53846 + 13,63.10256 + 13),
+  y2 = c(41.53846, 63.10256),
+)
+annotationColor <- "gray"
+annotationAlpha <- 1
 
 IntSpeakerRatings_Long %>%
   ggplot() +
@@ -520,15 +528,40 @@ IntSpeakerRatings_Long %>%
       color = Method,
       shape = Method) +
   #adding data pairs and fitted regression line
+  geom_line(inherit.aes = F,
+            aes(x = rating,
+                y = naive_OT,
+                group = SpeakerID),
+            color = "light gray",
+            alpha = .8) +
   geom_point() +
   geom_smooth(method = "lm",
-              se = F) +
-  #adding reference line to indicate theoretical perfict fit
-  geom_abline(intercept = 0, slope = 1, linetype = 2) +
-  ylab("Naïve Listener OT Scores") +
-  labs(color = "SLP Intelligibility Measures", shape = "SLP Intelligibility Measures") +
+             se = F) +
   scale_color_manual(values = my_pal[2:3]) +
   scale_shape_manual(values = c(1, 16)) +
+  #adding reference line to indicate theoretical perfict fit
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  ylab("Naïve Listeners' OT Scores") +
+  labs(color = "SLPs' Intelligibility Measures", shape = "SLPs' Intelligibility Measures") +
+  # Annotation for HDM1O & AM1
+  geom_curve(inherit.aes = F,
+    data = arrows, aes(x = x1, y = y1, xend = x2, yend = y2),
+    arrow = arrow(length = unit(0.08, "inch")), size = 0.5,
+    color = annotationColor,
+    curvature = 0.3,
+    alpha = annotationAlpha) +
+  annotate("text",
+           x = arrows$x1[1],
+           y = arrows$y1[1] + 3, 
+           label = "HDM10",
+           color = annotationColor,
+           alpha = annotationAlpha) +
+  annotate("text",
+           x = arrows$x1[2],
+           y = arrows$y1[2] + 3, 
+           label = "AM1",
+           color = annotationColor,
+           alpha = annotationAlpha) +
   #equalize the x and y axes
   coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
   theme_classic() +
@@ -539,6 +572,30 @@ IntSpeakerRatings_Long %>%
 #Saving the scatterplot
 ggsave("Plots/RQ3_ScatterPlot.png", plot = last_plot(), height = 5, width = 5, units = "in")
 
+```
+
+## SLP VAS x SLP EST Scatter
+This is a scatterplot between SLP VAS and SLP estimations for the aggregate data
+```{r}
+IntSpeakerRatings %>%
+  ggplot() +
+  aes(x = slp_VAS, 
+      y = slp_EST) +
+  #adding data pairs and fitted regression line
+  geom_point() +
+  geom_smooth(method = "lm",
+              se = F) +
+  #adding reference line to indicate theoretical perfict fit
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  ylab("SLPs' Percent Estimations") +
+  xlab("SLPs' VAS Ratings") +
+  scale_color_manual(values = my_pal[2:3]) +
+  scale_shape_manual(values = c(1, 16)) +
+  #equalize the x and y axes
+  coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
+  theme_classic() +
+  theme(legend.position = "bottom", 
+        aspect.ratio = 1)
 ```
 
 
