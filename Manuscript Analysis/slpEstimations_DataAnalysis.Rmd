@@ -444,31 +444,14 @@ This first block explores the correlation matrix of SLP and Naive listener intel
 
 ```{r}
 
-# Creating a correlation Matrix
+# Correlation between Naive OT and SLP VAS
+stats::cor.test(IntSpeakerRatings$slp_VAS, IntSpeakerRatings$naive_OT, method = "pearson", use = "complete.obs")
 
-CorrMatrix <- IntSpeakerRatings %>%
-  dplyr::select(!c(SpeakerID, naive_VAS)) %>%
-  as.matrix() %>%
-  Hmisc::rcorr() 
+#Correlation between Naive OT and SLP percent estimations
+stats::cor.test(IntSpeakerRatings$slp_EST, IntSpeakerRatings$naive_OT, method = "pearson", use = "complete.obs")
 
-# Testing to see if all coefficients are significant at the .05 level
-
-CorrMatrixP <- CorrMatrix$P < .05
-
-CorrMatrix <- CorrMatrix$r
-
-# Creating a correlation matrix table to export and save
-
-CorrMatrix <- CorrMatrix %>%
-  as.data.frame() %>%
-  dplyr::mutate(naive_OT = as.numeric(naive_OT),
-                slp_EST = as.numeric(slp_EST),
-                slp_VAS = as.numeric(slp_VAS)) %>%
-  gt::gt() %>%
-  gt::fmt_number(columns = c(naive_OT, slp_EST, slp_VAS), decimals = 2) 
-
-CorrMatrix %>%
-  gt::gtsave("Tables/CorrMatrix.html")
+#Correlation between SLP VAS and SLP percent estimations
+stats::cor.test(IntSpeakerRatings$slp_VAS, IntSpeakerRatings$slp_EST, method = "pearson", use = "complete.obs")
 
 ```
 
