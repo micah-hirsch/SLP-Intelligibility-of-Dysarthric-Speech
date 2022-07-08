@@ -681,6 +681,7 @@ Supp_Table <- dplyr::full_join(slp_data, naive_data, by = "Speaker") %>%
 
 Supp_Table %>%
   gt::gt() %>%
+  gt::fmt_number(Mean:Naive_SD, decimals = 2) %>%
   gt::gtsave("Tables/Supp_Table.html")
 
 ```
