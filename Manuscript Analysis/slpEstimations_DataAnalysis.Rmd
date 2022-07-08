@@ -652,3 +652,69 @@ performance::check_model(SLP_VASmodel_VAS)
 
 ```
 
+# Supplementary Materials
+
+## Table with All Speaker Means
+
+```{r}
+
+baseline_data <- rio::import("Shared Data/Speaker Baselines.xlsx")
+
+slp_data <- slp_Correlation %>%
+  dplyr::select(!c(slp_VAS.Rel, slp_EST.Rel)) %>%
+  dplyr::group_by(Speaker) %>%
+  dplyr::summarize(SLP_VAS = mean(slp_VAS, na.rm = T), 
+                   VAS_SD = sd(slp_VAS, na.rm = T), 
+                   SLP_EST = mean(slp_EST, na.rm = T), 
+                   EST_SD = sd(slp_EST, na.rm = T))
+
+naive_data <- naive_Correlation %>%
+  dplyr::select(!naive_VAS) %>%
+  dplyr::group_by(SpeakerID) %>%
+  dplyr::summarize(Naive_OT = mean(naive_OT, na.rm = T), Naive_SD = sd(naive_OT, na.rm = T)) %>%
+  dplyr::rename(Speaker = SpeakerID)
+
+Supp_Table <- dplyr::full_join(slp_data, naive_data, by = "Speaker") %>%
+  dplyr::full_join(., baseline_data, by = "Speaker") %>%
+  dplyr::relocate(Mean:SD, .before = SLP_VAS) %>%
+  dplyr::filter(Speaker != "ALSF5") 
+
+Supp_Table %>%
+  gt::gt() %>%
+  gt::gtsave("Tables/Supp_Table.html")
+
+```
+
+
+## Figure
+
+```{r}
+
+slp_Correlation1 <- slp_Correlation %>%
+  dplyr::mutate(slpID = factor(slpID, levels = c("slp2", "slp3", "slp4", "slp5", "slp6", "slp8", "slp9", 
+                                    "slp10", "slp11", "slp13", "slp14", "slp15", "slp16", "slp17", "slp18", "slp19", 
+                                    "slp20", "slp21", "slp22", "slp23", "slp25"))) %>%
+  dplyr::mutate(Etiology = case_when(
+    grepl("ALS", Speaker, fixed = T) ~ "ALS",
+    grepl("PD", Speaker, fixed = T) ~ "PD",
+    grepl("HD", Speaker, fixed = T) ~ "HD",
+    TRUE ~ "Ataxia")) %>%
+  dplyr::mutate(Etiology = as.factor(Etiology))
+
+slp_Correlation1 %>%
+  ggplot() +
+  aes(x = slp_VAS,
+      y = slp_EST) +
+  geom_point(aes(color = Etiology)) +
+  geom_smooth(method = "lm", se = F, color = "black") +
+  coord_cartesian(xlim = c(0, 100), ylim = c(0, 100)) +
+  facet_wrap("slpID", scales = "free") +
+  xlab("SLPs' VAS Ratings") +
+  ylab("SLPs' Percent Estimations") +
+  theme_classic() +
+  theme(aspect.ratio = 1)
+
+ggsave("Plots/Supp_Scatterplot.png", plot = last_plot(), height = 5, width = 5, units = "in", scale = 1.5)
+
+```
+
